@@ -1,0 +1,26 @@
+[
+  {
+    "name": "ISO8601",
+    "comment": "\n\n@docs parse, toUnix, fromUnix\n\n-- reading\n--    http://www.oracle.com/technetwork/articles/java/jf14-date-time-2125367.html\n--    https://golang.org/src/time/format.go?s=22436:22482#L722\n--    https://github.com/rust-lang/rust/issues/14657\n--    https://github.com/ThreeTen/threetenbp\n--\n\n",
+    "aliases": [],
+    "types": [],
+    "values": [
+      {
+        "name": "fromUnix",
+        "comment": " TODO Document\n\nNOTE: This uses seconds, Javascript and Elm Date use milliseconds\n",
+        "type": "ISO8601.Second -> ISO8601.Time"
+      },
+      {
+        "name": "parse",
+        "comment": " TODO Document\n",
+        "type": "String -> ISO8601.Time"
+      },
+      {
+        "name": "toUnix",
+        "comment": " Converts the Time to seconds starting at the Unix epoch\n\nTODO examples\n\nNOTE: This uses seconds, Javascript and Elm Date use milliseconds\n",
+        "type": "ISO8601.Time -> ISO8601.Second"
+      }
+    ],
+    "generated-with-elm-version": "0.16.0"
+  }
+]
