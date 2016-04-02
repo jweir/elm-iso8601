@@ -87,6 +87,7 @@ parse s =
             | hour = times.hour
             , minute = times.minute
             , second = times.second
+            , millisecond = times.millisecond
             , offset = offset
           }
 
@@ -130,16 +131,26 @@ parseTime : String -> Time
 parseTime timeString =
   let
     times =
-      matcher (regex "(\\d\\d):?(\\d\\d):?(\\d\\d)") timeString
+      -- NOTE ISO8601 states any component (hour, minute or second) supports fracational times
+      -- but only one. This library only supports fractional seconds for now
+      -- hh:mm:ss[.,]fractional seconds
+      matcher (regex "(\\d\\d):?(\\d\\d)?:?(\\d\\d)?[.,]?(\\d{3})?") timeString
   in
     case times of
-      [ [ Just hour, Just minute, Just second ] ] ->
+      [ [ Just hour, Just minute, Just second, Just ms ] ] ->
+        let
+            -- since the ms will possibly start with 0, add the 1 and get the remainder
+            ms' = (toInt ("1" ++ ms)) % 1000
+        in
+            { defaultTime | hour = toInt hour, minute = toInt minute, second = toInt second, millisecond =  ms' }
+        
+      [ [ Just hour, Just minute, Just second, Nothing ] ] ->
         { defaultTime | hour = toInt hour, minute = toInt minute, second = toInt second }
 
-      [ [ Just hour, Just minute ] ] ->
+      [ [ Just hour, Just minute, Nothing, Nothing ] ] ->
         { defaultTime | hour = toInt hour, minute = toInt minute }
 
-      [ [ Just hour ] ] ->
+      [ [ Just hour, Nothing, Nothing, Nothing ] ] ->
         { defaultTime | hour = toInt hour }
 
       _ ->
