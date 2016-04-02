@@ -1,8 +1,8 @@
-module ISO8601 (parse, toUnix, fromUnix) where
+module ISO8601 (parse, toTime, fromTime) where
 
 {-|
 
-@docs parse, toUnix, fromUnix
+@docs parse, toTime, fromTime
 
 -- reading
 --    http://www.oracle.com/technetwork/articles/java/jf14-date-time-2125367.html
@@ -229,9 +229,11 @@ calendar =
 
 
 -- integeger values for periods
+ims : Millisecond
+ims = 1
 
 isec : Second
-isec = 1
+isec = ims * 1000
 
 imin : Minute
 imin = isec * 60
@@ -284,8 +286,8 @@ TODO examples
 
 NOTE: This uses seconds, Javascript and Elm Date use milliseconds
 -}
-toUnix : Time -> Second
-toUnix time =
+toTime : Time -> Millisecond
+toTime time =
   case time.year >= 1970 of
     False ->
       let
@@ -306,7 +308,7 @@ toUnix time =
           , (offset time)
           ]
       in
-        0 - List.sum tots
+        0 - (List.sum tots - time.millisecond)
 
     True ->
       let
@@ -326,7 +328,7 @@ toUnix time =
           , (-1 * offset time)
           ]
       in
-        List.sum tots
+        (List.sum tots) + time.millisecond
 
 
 
@@ -364,13 +366,13 @@ monthsFromDays year startMonth remainingDays =
 
 NOTE: This uses seconds, Javascript and Elm Date use milliseconds
 -}
-fromUnix : Second -> Time
-fromUnix src =
+fromTime : Millisecond -> Time
+fromTime ms =
   let
     v =
-      if src > 0 then
+      if ms > 0 then
         1
-      else if src < 0 then
+      else if ms < 0 then
         -1
       else
         0
@@ -380,19 +382,21 @@ fromUnix src =
         { defaultTime | year = 1970 }
 
       1 ->
-        let
+        let          
+          milliseconds = ms % isec
+          
           -- additional days, the first day is implied
           days =
-            src // iday
+            ms // iday
 
           seconds =
-            src % imin
+            ms // isec % 60
 
           minutes =
-            src // imin % imin
+            ms // imin % 60
 
           hours =
-            src // ihour % imin % 24
+            ms // ihour % 24
 
           ( years, remaningDays ) =
             yearsFromDays 1970 days
@@ -408,6 +412,7 @@ fromUnix src =
             , day = daysInMonth + 1
             , month = month
             , year = years
+            , millisecond = milliseconds
           }
 
       _ ->

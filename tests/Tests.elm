@@ -3,6 +3,7 @@ module Tests (..) where
 import ElmTest exposing (..)
 import ISO8601 
 import ISO8601.Helpers
+import Date
 
 testTime time year month day hour minute second millisecond offset zone =
   suite
@@ -51,7 +52,7 @@ toUnixTest =
   let
     assert str seconds =
       ISO8601.parse str
-        |> ISO8601.toUnix
+        |> ISO8601.toTime
         |> equals seconds
   in
     suite
@@ -60,18 +61,43 @@ toUnixTest =
         -- Unix Epoch in New Dehli
       , assert "1970-01-01T05:30:00+05:30" 0
       , assert "1969-12-31T17:00:00-07:00" 0
-      , assert "1969-12-31T23:59:59Z" -1
-      , assert "1969-12-31T22:59:59Z" -3601
-      , assert "1918-11-11T11:00:00Z" -1613826000
-      , assert "1918-11-11T09:00:00-0200" -1613826000
-      , assert "2016-02-04T05:06:07Z" 1454562367
+      , assert "1969-12-31T23:59:59.999Z" -1
+      , assert "1969-12-31T23:59:59Z" -1000
+      , assert "1969-12-31T22:59:59Z" -3601000
+      , assert "1918-11-11T11:00:00Z" -1613826000000
+      , assert "1918-11-11T09:00:00-0200" -1613826000000
+      , assert "2016-02-04T05:06:07Z" 1454562367000
+      , assert "2016-02-04T05:06:07.123Z" 1454562367123
       ]
 
+testElmDateCompatibility : Test
+testElmDateCompatibility =
+    let      
+      assert str =
+        let 
+            iso = ISO8601.parse str |> ISO8601.toTime
+            -- round trip from ISO to ELM back to ISO 
+            elm = 
+                iso
+                |> toFloat
+                |> Date.fromTime 
+                |> Date.toTime
+                |> round
+                 
+            _ = Debug.log "" [ISO8601.fromTime iso, ISO8601.fromTime elm]
+         in
+            iso `equals` elm  
+    in 
+      suite 
+        "Elm.Date Compatibile"
+        [ assert "1969-12-31T17:00:00-07:00"
+        , assert "2016-12-31T17:00:00-07:00"
+        ] 
 
 testFromUnix seconds =
   let
     time =
-      ISO8601.fromUnix seconds
+      ISO8601.fromTime seconds
   in
     testTime time
 
@@ -79,11 +105,12 @@ testFromUnix seconds =
 fromUnixTest : Test
 fromUnixTest =
   suite
-    "fromUnix"
+    "fromTime"
     [ testFromUnix 0 1970 1 1 0 0 0 0 ( 0, 0 ) "UTC"
-    , testFromUnix 3661 1970 1 1 1 1 1 0 ( 0, 0 ) "UTC"
-    , testFromUnix 86400 1970 1 2 0 0 0 0 ( 0, 0 ) "UTC"
-    , testFromUnix 1456707723 2016 2 29 1 2 3 0 ( 0, 0 ) "UTC"
+    , testFromUnix 3661123 1970 1 1 1 1 1 123 ( 0, 0 ) "UTC"
+    , testFromUnix 86400000 1970 1 2 0 0 0 0 ( 0, 0 ) "UTC"
+    , testFromUnix 1456707723000 2016 2 29 1 2 3 0 ( 0, 0 ) "UTC"
+    --, testFromUnix -1000 1969 12 31 23 59 59 0 ( 0, 0 ) "UTC"
     ]
 
 
@@ -105,4 +132,4 @@ leapYearTests =
 
 
 main =
-  elementRunner (suite "ISO8601" [ parsingTests, toUnixTest, fromUnixTest, leapYearTests ])
+  elementRunner (suite "ISO8601" [ parsingTests, toUnixTest, fromUnixTest, leapYearTests, testElmDateCompatibility ])
