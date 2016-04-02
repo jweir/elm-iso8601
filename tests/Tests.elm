@@ -84,7 +84,6 @@ testElmDateCompatibility =
                 |> Date.toTime
                 |> round
                  
-            _ = Debug.log "" [ISO8601.fromTime iso, ISO8601.fromTime elm]
          in
             iso `equals` elm  
     in 
@@ -107,10 +106,13 @@ fromUnixTest =
   suite
     "fromTime"
     [ testFromUnix 0 1970 1 1 0 0 0 0 ( 0, 0 ) "UTC"
+    , testFromUnix 1 1970 1 1 0 0 0 1 ( 0, 0 ) "UTC"
     , testFromUnix 3661123 1970 1 1 1 1 1 123 ( 0, 0 ) "UTC"
     , testFromUnix 86400000 1970 1 2 0 0 0 0 ( 0, 0 ) "UTC"
     , testFromUnix 1456707723000 2016 2 29 1 2 3 0 ( 0, 0 ) "UTC"
-    --, testFromUnix -1000 1969 12 31 23 59 59 0 ( 0, 0 ) "UTC"
+    , testFromUnix -1 1969 12 31 23 59 59 999 ( 0, 0 ) "UTC"
+    , testFromUnix -2000 1969 12 31 23 59 58 00 ( 0, 0 ) "UTC"
+    , testFromUnix -1456707723000 1923 11 3 22 57 57 0 ( 0, 0 ) "UTC"
     ]
 
 
@@ -131,5 +133,10 @@ leapYearTests =
     suite "Leap Year" (List.map assertion expectations)
 
 
+all = 
+    suite "ISO8601" 
+      [ 
+         parsingTests, toUnixTest, fromUnixTest, leapYearTests, testElmDateCompatibility ]
+
 main =
-  elementRunner (suite "ISO8601" [ parsingTests, toUnixTest, fromUnixTest, leapYearTests, testElmDateCompatibility ])
+  elementRunner all

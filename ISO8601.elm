@@ -18,6 +18,7 @@ import Regex exposing (find, regex, split)
 import String
 import Array
 import ISO8601.Helpers exposing (isLeapYear)
+import Debug
 
 -- Model
 
@@ -97,7 +98,7 @@ parse s =
       _ ->
         defaultTime
 
-
+-- helper for regular expressions
 matcher : Regex.Regex -> String -> List (List (Maybe String))
 matcher re src =
   let
@@ -107,6 +108,7 @@ matcher re src =
     List.map .submatches matches
 
 
+-- parses the date portion of the string
 parseDate : String -> Time
 parseDate dateString =
   let
@@ -127,6 +129,7 @@ parseDate dateString =
         defaultTime
 
 
+-- parses the time portion of the string
 parseTime : String -> Time
 parseTime timeString =
   let
@@ -143,7 +146,7 @@ parseTime timeString =
             ms' = (toInt ("1" ++ ms)) % 1000
         in
             { defaultTime | hour = toInt hour, minute = toInt minute, second = toInt second, millisecond =  ms' }
-        
+
       [ [ Just hour, Just minute, Just second, Nothing ] ] ->
         { defaultTime | hour = toInt hour, minute = toInt minute, second = toInt second }
 
@@ -346,6 +349,16 @@ yearsFromDays startYear remainingDays =
     else
       ( startYear, remainingDays )
 
+yearsFromDaysBackwards : Year -> Day -> ( Year, Day )
+yearsFromDaysBackwards startYear remainingDays =
+  let
+    remainingDays' =
+      remainingDays + daysInYear startYear
+  in
+    if remainingDays' < 0 then
+      yearsFromDaysBackwards (startYear - 1) remainingDays'
+    else
+      ( startYear,  (daysInYear startYear) + remainingDays )
 
 
 -- remaingDays will alawys be less than 366
@@ -382,9 +395,9 @@ fromTime ms =
         { defaultTime | year = 1970 }
 
       1 ->
-        let          
+        let
           milliseconds = ms % isec
-          
+
           -- additional days, the first day is implied
           days =
             ms // iday
@@ -415,5 +428,43 @@ fromTime ms =
             , millisecond = milliseconds
           }
 
+      -- less than UNIX epoch
       _ ->
-        defaultTime
+        let
+          totalDays = ms // iday
+
+          ( years, remaningDays ) =
+            yearsFromDaysBackwards 1969 totalDays
+
+          ( month, daysInMonth ) =
+            monthsFromDays years 1 remaningDays
+
+          milliseconds = ms % isec
+
+          rem = ms % iday
+
+          -- additional days, the first day is implied
+          days =
+            rem // iday
+
+          seconds =
+            rem // isec % 60
+
+          minutes =
+            rem // imin % 60
+
+          hours =
+            rem // ihour % 24
+
+
+        in
+          { defaultTime
+            | second = seconds
+            , minute = minutes
+            , hour = hours
+            , day = daysInMonth
+            , month = month
+            , year = years
+            , millisecond = milliseconds
+          }
+
