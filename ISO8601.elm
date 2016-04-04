@@ -33,6 +33,22 @@ type alias Second     = Int
 type alias Millisecond = Int
 type alias Offset     = ( Hour, Minute )
 
+-- integeger values for periods
+ims : Millisecond
+ims = 1
+
+isec : Second
+isec = ims * 1000
+
+imin : Minute
+imin = isec * 60
+
+ihour : Hour
+ihour = imin * 60
+
+iday : Day
+iday = ihour * 24
+
 
 type alias Time =
   { year       : Year
@@ -231,22 +247,6 @@ calendar =
     ]
 
 
--- integeger values for periods
-ims : Millisecond
-ims = 1
-
-isec : Second
-isec = ims * 1000
-
-imin : Minute
-imin = isec * 60
-
-ihour : Hour
-ihour = imin * 60
-
-iday : Day
-iday = ihour * 24
-
 daysInMonth : Year -> Month -> Day
 daysInMonth year monthInt =
   let
@@ -336,29 +336,27 @@ toTime time =
 
 
 -- from a starting year returns the ending year and remaing days
-
-
-yearsFromDays : Year -> Day -> ( Year, Day )
-yearsFromDays startYear remainingDays =
-  let
-    remainingDays' =
-      remainingDays - daysInYear startYear
-  in
-    if remainingDays' > 0 then
-      yearsFromDays (startYear + 1) remainingDays'
-    else
-      ( startYear, remainingDays )
-
-yearsFromDaysBackwards : Year -> Day -> ( Year, Day )
-yearsFromDaysBackwards startYear remainingDays =
-  let
-    remainingDays' =
-      remainingDays + daysInYear startYear
-  in
-    if remainingDays' < 0 then
-      yearsFromDaysBackwards (startYear - 1) remainingDays'
-    else
-      ( startYear,  (daysInYear startYear) + remainingDays )
+daysToYears : EpochRelative -> Year -> Day -> ( Year, Day )
+daysToYears rel startYear remainingDays =
+  case rel of
+    After ->
+      let
+        remainingDays' =
+          remainingDays - daysInYear startYear
+      in
+        if remainingDays' > 0 then
+          daysToYears After (startYear + 1) remainingDays'
+        else
+          ( startYear, remainingDays )
+    Before ->
+      let
+        remainingDays' =
+          remainingDays + daysInYear startYear
+      in
+        if remainingDays' < 0 then
+          daysToYears Before (startYear - 1) remainingDays'
+        else
+          ( startYear,  (daysInYear startYear) + remainingDays )
 
 
 -- remaingDays will alawys be less than 366
@@ -375,6 +373,9 @@ monthsFromDays year startMonth remainingDays =
     else
       ( startMonth, remainingDays )
 
+
+type EpochRelative = Before | After 
+
 {-| TODO Document
 
 NOTE: This uses seconds, Javascript and Elm Date use milliseconds
@@ -382,21 +383,17 @@ NOTE: This uses seconds, Javascript and Elm Date use milliseconds
 fromTime : Millisecond -> Time
 fromTime ms =
   let
+    milliseconds = ms % isec
+
     v =
-      if ms > 0 then
-        1
-      else if ms < 0 then
-        -1
-      else
-        0
+      if ms >= 0 then
+        After 
+      else 
+        Before
   in
     case v of
-      0 ->
-        { defaultTime | year = 1970 }
-
-      1 ->
+      After ->
         let
-          milliseconds = ms % isec
 
           -- additional days, the first day is implied
           days =
@@ -412,7 +409,7 @@ fromTime ms =
             ms // ihour % 24
 
           ( years, remaningDays ) =
-            yearsFromDays 1970 days
+            daysToYears After 1970 days
 
           ( month, daysInMonth ) =
             monthsFromDays years 1 remaningDays
@@ -428,22 +425,18 @@ fromTime ms =
             , millisecond = milliseconds
           }
 
-      -- less than UNIX epoch
-      _ ->
+      Before ->
         let
           totalDays = ms // iday
 
           ( years, remaningDays ) =
-            yearsFromDaysBackwards 1969 totalDays
+            daysToYears Before 1969 totalDays
 
           ( month, daysInMonth ) =
             monthsFromDays years 1 remaningDays
 
-          milliseconds = ms % isec
-
           rem = ms % iday
 
-          -- additional days, the first day is implied
           days =
             rem // iday
 
