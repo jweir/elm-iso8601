@@ -1,8 +1,8 @@
-module ISO8601 (parse, toTime, fromTime) where
+module ISO8601 (parse, toTime, fromTime, toString) where
 
 {-|
 
-@docs parse, toTime, fromTime
+@docs parse, toTime, fromTime, toString
 
 -- reading
 --    http://www.oracle.com/technetwork/articles/java/jf14-date-time-2125367.html
@@ -77,6 +77,50 @@ defaultTime =
   }
 
 
+fmt : Int -> String
+fmt n =
+  if n < 10 then
+    "0" ++ Basics.toString n
+  else
+    Basics.toString n
+
+fmtMs : Millisecond -> String
+fmtMs n = 
+  if n == 0 then
+    ""
+  else if n < 10 then
+    ".00" ++ Basics.toString n
+  else if n < 100 then
+    ".0" ++ Basics.toString n
+  else
+    "." ++ Basics.toString n
+
+fmtOffset : Offset -> String
+fmtOffset offset =
+  case offset of
+    (0,0) -> "Z"
+    (h,m) -> 
+      let 
+        symbol = 
+          if h >= 0  then
+            "+"
+          else 
+            "-"
+      in
+        symbol ++ (fmt (abs h)) ++ (fmt m)
+
+{-| TODO Document
+TODO add to UTC
+-}
+toString : Time -> String
+toString time =
+  String.join "" [
+    fmt time.year, "-", fmt time.month, "-", fmt time.day
+    , "T"
+    , fmt time.hour, ":", fmt time.minute, ":",  fmt time.second
+    , fmtMs time.millisecond
+    , fmtOffset time.offset
+    ]
 
 -- Parsing
 

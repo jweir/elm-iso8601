@@ -40,7 +40,9 @@ parsingTests =
         , testParse "2015-03-02T15:16:17" 2015 3 2 15 16 17 0 ( 0, 0 ) "UTC"
         , testParse "2006-01-02T15:04:05+00:00" 2006 1 2 15 4 5 0 ( 0, 0 ) "UTC"
         , testParse "2006-01-02T15:04:05+05:30" 2006 1 2 15 4 5 0 ( 5, 30 ) "UTC"
+        , testParse "2006-01-02T15:04:05+0530" 2006 1 2 15 4 5 0 ( 5, 30 ) "UTC"
         , testParse "2006-01-02T15:04:05-0700" 2006 1 2 15 4 5 0 ( -7, 0 ) "UTC"
+        , testParse "2006-01-02T15:04:05-1200" 2006 1 2 15 4 5 0 ( -7, 0 ) "UTC"
         , testParse "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 ) "UTC"
         , testParse "1066-12-03T10:01:59.022+00:00" 1066 12 3 10 1 59 22 ( 0, 0 ) "UTC"
         , testParse "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 ( 0, 0 ) "UTC"
@@ -51,9 +53,10 @@ toUnixTest : Test
 toUnixTest =
   let
     assert str seconds =
-      ISO8601.parse str
-        |> ISO8601.toTime
-        |> equals seconds
+      suite str  [
+        ISO8601.parse str |> ISO8601.toTime |> equals seconds
+      , ISO8601.parse str |> ISO8601.toString |> equals str
+      ]
   in
     suite
       "toUnix"
