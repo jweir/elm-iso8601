@@ -1,7 +1,7 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "summary": "Parses IS8601 based time strings in to useful time records.",
-    "repository": "https://github.com/jweir/elm-iso6801.git",
+    "repository": "https://github.com/jweir/elm-iso8601.git",
     "license": "MIT",
     "source-directories": [
         "src"
