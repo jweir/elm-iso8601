@@ -1,8 +1,67 @@
-module ISO8601 (parse, toTime, fromTime, toString) where
+module ISO8601 (fromString, toTime, fromTime, toString, Time) where
 
-{-|
+{-| This package provides functionality for working with time and strings based
+on the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`
 
-@docs parse, toTime, fromTime, toString
+It is a "pure" Elm package – no Native bindings to Javascript's Date are used.
+This does have a performance cost. This package is about 10x slower than the
+native Date library. But there are advantages:
+
+* _Does not cast the time in the local timezone_
+* Preserves the timezone offset values.
+* Always returns a time. Invalid input results in a time of `000-01-01T00:00:00Z`
+
+If you have worked with timestamps in a browser you may have come
+across issues where the time is recast in the local timezone.
+
+For example in Javascript
+
+````javascript
+new Date(Date.parse("2016-01-01T01:30:00-04:00"))
+// Thu Dec 31 2015 21:30:00 GMT-0800 (PST)
+````
+
+While the above is the correct time, it is looses its context – if you grab the year it is 2015!
+
+Now using ISO8601
+````elm
+import ISO8601
+
+t = ISO8601.fromString "2016-01-01T01:30:00-04:00"
+-- { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = (-4,0) }
+    : ISO8601.Time
+
+ISO8601.toString t
+-- "2016-01-01T01:30:00-0400" : String
+
+````
+
+Example of compatibility with `Elm.Date`
+````elm
+
+import ISO8601
+import Date
+
+i = ISO8601.fromString "2016-01-01T01:30:00-04:00" |> ISO8601.toTime
+-- 1451626200000 : ISO8601.Millisecond
+
+d = i |> toFloat |> Date.fromTime
+-- {} : Date.Date
+Date.year d
+-- 2015 : Int 
+-- uh, back to our Javascript time casting problem
+````
+
+
+# Definition
+@docs Time
+
+# String parsing and conversion
+@docs fromString, toString
+
+# Time conversion
+@docs toTime, fromTime
+-}
 
 -- reading
 --    http://www.oracle.com/technetwork/articles/java/jf14-date-time-2125367.html
@@ -10,8 +69,6 @@ module ISO8601 (parse, toTime, fromTime, toString) where
 --    https://github.com/rust-lang/rust/issues/14657
 --    https://github.com/ThreeTen/threetenbp
 --    https://en.wikipedia.org/wiki/ISO_8601
-
--}
 
 
 import Regex exposing (find, regex, split)
@@ -23,7 +80,6 @@ import Debug
 -- Model
 
 
-type alias Zone       = String
 type alias Year       = Int
 type alias Month      = Int
 type alias Day        = Int
@@ -50,16 +106,18 @@ iday : Day
 iday = ihour * 24
 
 
+{-| Record representing the time. Offset is tuple representing the hour and minute ± from UTC.
+  
+-}
 type alias Time =
-  { year       : Year
-  , month      : Month
-  , day        : Day
-  , hour       : Hour
-  , minute     : Minute
-  , second     : Second
-  , millisecond : Millisecond
-  , offset     : Offset
-  , zone       : Zone
+  { year       : Int
+  , month      : Int
+  , day        : Int
+  , hour       : Int
+  , minute     : Int
+  , second     : Int
+  , millisecond : Int
+  , offset     : (Int, Int)
   }
 
 
@@ -73,7 +131,6 @@ defaultTime =
   , second     = 0
   , millisecond = 0
   , offset     = ( 0, 0 )
-  , zone       = "UTC"
   }
 
 
@@ -109,8 +166,9 @@ fmtOffset offset =
       in
         symbol ++ (fmt (abs h)) ++ (fmt m)
 
-{-| TODO Document
-TODO add to UTC
+ü = 1
+
+{-| Converts a Time record to an ISO 8601 formated string.
 -}
 toString : Time -> String
 toString time =
@@ -122,12 +180,21 @@ toString time =
     , fmtOffset time.offset
     ]
 
--- Parsing
 
-{-| TODO Document
+{-| Given an ISO 8601 compatible string, returns a Time record.
+
+````elm
+ISO8601.fromString "2016-01-01T01:30:00-04:00"
+-- { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = (-4,0) }
+    : ISO8601.Time
+ISO8601.fromString "2016-11-07"
+--{ year = 2016, month = 11, day = 7, hour = 0, minute = 0, second = 0, millisecond = 0, offset = (0,0) }
+    : ISO8601.Time
+```
+
 -}
-parse : String -> Time
-parse s =
+fromString : String -> Time
+fromString s =
   let
     parts =
       split (Regex.All) (regex "T") s
@@ -327,13 +394,9 @@ offset time =
 
 
 
-{-| Converts the Time to seconds starting at the Unix epoch
-
-TODO examples
-
-NOTE: This uses seconds, Javascript and Elm Date use milliseconds
+{-| Converts the Time to milliseconds relative to the Unix epoch: `1970-01-01T00:00:00Z`
 -}
-toTime : Time -> Millisecond
+toTime : Time -> Int
 toTime time =
   case time.year >= 1970 of
     False ->
@@ -420,11 +483,9 @@ monthsFromDays year startMonth remainingDays =
 
 type EpochRelative = Before | After 
 
-{-| TODO Document
-
-NOTE: This uses seconds, Javascript and Elm Date use milliseconds
+{-| Converts the milliseconds relative to the Unix epoch to a Time record.
 -}
-fromTime : Millisecond -> Time
+fromTime : Int -> Time
 fromTime ms =
   let
     milliseconds = ms % isec

@@ -1,6 +1,12 @@
-var count = 5000000
-var times = new Array(count).map(function(n){
-  return new Date(n * count)
-}).map(function(d){ return d.getTime() })
+var count = 500000
 
-console.log(times.length)
+var times = []
+function time(){
+  for(var n =0; n < count; n++){
+    var a = (new Date(n)).toISOString()
+    times.push(new Date(Date.parse(a)).getTime())
+  }
+}
+
+time(0)
+console.log("done", count, times.length)

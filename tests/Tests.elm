@@ -5,7 +5,7 @@ import ISO8601
 import ISO8601.Helpers
 import Date
 
-testTime time year month day hour minute second millisecond offset zone =
+testTime time year month day hour minute second millisecond offset =
   suite
     ""
     [ time.year |> equals year
@@ -16,14 +16,13 @@ testTime time year month day hour minute second millisecond offset zone =
     , time.second |> equals second
     , time.millisecond |> equals millisecond
     , time.offset |> equals offset
-    , time.zone |> equals zone
     ]
 
 
 testParse string =
   let
     time =
-      ISO8601.parse string
+      ISO8601.fromString string
   in
     testTime time
 
@@ -32,20 +31,20 @@ parsingTests : Test
 parsingTests =
     suite
         "Parsing"
-        [ testParse "2006" 2006 1 1 0 0 0 0 ( 0, 0 ) "UTC"
-        , testParse "2006-11" 2006 11 1 0 0 0 0 ( 0, 0 ) "UTC"
-        , testParse "2015-03-02" 2015 3 2 0 0 0 0 ( 0, 0 ) "UTC"
-        , testParse "2015-03-02T15" 2015 3 2 15 0 0 0 ( 0, 0 ) "UTC"
-        , testParse "2015-03-02T15:16" 2015 3 2 15 16 0 0 ( 0, 0 ) "UTC"
-        , testParse "2015-03-02T15:16:17" 2015 3 2 15 16 17 0 ( 0, 0 ) "UTC"
-        , testParse "2006-01-02T15:04:05+00:00" 2006 1 2 15 4 5 0 ( 0, 0 ) "UTC"
-        , testParse "2006-01-02T15:04:05+05:30" 2006 1 2 15 4 5 0 ( 5, 30 ) "UTC"
-        , testParse "2006-01-02T15:04:05+0530" 2006 1 2 15 4 5 0 ( 5, 30 ) "UTC"
-        , testParse "2006-01-02T15:04:05-0700" 2006 1 2 15 4 5 0 ( -7, 0 ) "UTC"
-        , testParse "2006-01-02T15:04:05-1200" 2006 1 2 15 4 5 0 ( -7, 0 ) "UTC"
-        , testParse "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 ) "UTC"
-        , testParse "1066-12-03T10:01:59.022+00:00" 1066 12 3 10 1 59 22 ( 0, 0 ) "UTC"
-        , testParse "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 ( 0, 0 ) "UTC"
+        [ testParse "2006" 2006 1 1 0 0 0 0 ( 0, 0 ) 
+        , testParse "2006-11" 2006 11 1 0 0 0 0 ( 0, 0 ) 
+        , testParse "2015-03-02" 2015 3 2 0 0 0 0 ( 0, 0 ) 
+        , testParse "2015-03-02T15" 2015 3 2 15 0 0 0 ( 0, 0 ) 
+        , testParse "2015-03-02T15:16" 2015 3 2 15 16 0 0 ( 0, 0 ) 
+        , testParse "2015-03-02T15:16:17" 2015 3 2 15 16 17 0 ( 0, 0 ) 
+        , testParse "2006-01-02T15:04:05+00:00" 2006 1 2 15 4 5 0 ( 0, 0 ) 
+        , testParse "2006-01-02T15:04:05+05:30" 2006 1 2 15 4 5 0 ( 5, 30 ) 
+        , testParse "2006-01-02T15:04:05+0530" 2006 1 2 15 4 5 0 ( 5, 30 ) 
+        , testParse "2006-01-02T15:04:05-0700" 2006 1 2 15 4 5 0 ( -7, 0 ) 
+        , testParse "2006-01-02T15:04:05-1200" 2006 1 2 15 4 5 0 ( -12, 0 ) 
+        , testParse "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 ) 
+        , testParse "1066-12-03T10:01:59.022+00:00" 1066 12 3 10 1 59 22 ( 0, 0 ) 
+        , testParse "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 ( 0, 0 ) 
         ]
 
 
@@ -54,16 +53,16 @@ toUnixTest =
   let
     assert str seconds =
       suite str  [
-        ISO8601.parse str |> ISO8601.toTime |> equals seconds
-      , ISO8601.parse str |> ISO8601.toString |> equals str
+        ISO8601.fromString str |> ISO8601.toTime |> equals seconds
+      , ISO8601.fromString str |> ISO8601.toString |> equals str
       ]
   in
     suite
       "toUnix"
       [ assert "1970-01-01T00:00:00Z" 0
         -- Unix Epoch in New Dehli
-      , assert "1970-01-01T05:30:00+05:30" 0
-      , assert "1969-12-31T17:00:00-07:00" 0
+      , assert "1970-01-01T05:30:00+0530" 0
+      , assert "1969-12-31T17:00:00-0700" 0
       , assert "1969-12-31T23:59:59.999Z" -1
       , assert "1969-12-31T23:59:59Z" -1000
       , assert "1969-12-31T22:59:59Z" -3601000
@@ -78,7 +77,7 @@ testElmDateCompatibility =
     let      
       assert str =
         let 
-            iso = ISO8601.parse str |> ISO8601.toTime
+            iso = ISO8601.fromString str |> ISO8601.toTime
             -- round trip from ISO to ELM back to ISO 
             elm = 
                 iso
@@ -108,14 +107,14 @@ fromUnixTest : Test
 fromUnixTest =
   suite
     "fromTime"
-    [ testFromUnix 0 1970 1 1 0 0 0 0 ( 0, 0 ) "UTC"
-    , testFromUnix 1 1970 1 1 0 0 0 1 ( 0, 0 ) "UTC"
-    , testFromUnix 3661123 1970 1 1 1 1 1 123 ( 0, 0 ) "UTC"
-    , testFromUnix 86400000 1970 1 2 0 0 0 0 ( 0, 0 ) "UTC"
-    , testFromUnix 1456707723000 2016 2 29 1 2 3 0 ( 0, 0 ) "UTC"
-    , testFromUnix -1 1969 12 31 23 59 59 999 ( 0, 0 ) "UTC"
-    , testFromUnix -2000 1969 12 31 23 59 58 00 ( 0, 0 ) "UTC"
-    , testFromUnix -1456707723000 1923 11 3 22 57 57 0 ( 0, 0 ) "UTC"
+    [ testFromUnix 0 1970 1 1 0 0 0 0 ( 0, 0 ) 
+    , testFromUnix 1 1970 1 1 0 0 0 1 ( 0, 0 ) 
+    , testFromUnix 3661123 1970 1 1 1 1 1 123 ( 0, 0 ) 
+    , testFromUnix 86400000 1970 1 2 0 0 0 0 ( 0, 0 ) 
+    , testFromUnix 1456707723000 2016 2 29 1 2 3 0 ( 0, 0 ) 
+    , testFromUnix -1 1969 12 31 23 59 59 999 ( 0, 0 ) 
+    , testFromUnix -2000 1969 12 31 23 59 58 00 ( 0, 0 ) 
+    , testFromUnix -1456707723000 1923 11 3 22 57 57 0 ( 0, 0 ) 
     ]
 
 
