@@ -3,8 +3,7 @@ test:
 	elm-test TestRunner.elm
 
 bench: 
-	ruby make_dates.rb
-	b=`time elm-test BenchRunner.elm`
-	a=`time node bench.js`
+	a=`time elm-test BenchRunner.elm`
+	b=`time node bench.js`
 
 
