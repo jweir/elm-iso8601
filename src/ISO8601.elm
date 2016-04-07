@@ -76,6 +76,7 @@ import String
 import Array
 import ISO8601.Helpers exposing (isLeapYear)
 import Debug
+import Result exposing (Result)
 
 -- Model
 
@@ -193,8 +194,10 @@ ISO8601.fromString "2016-11-07"
 ```
 
 -}
-fromString : String -> Time
+fromString : String -> Result String Time
 fromString s =
+  -- validate the string
+  -- validate the numbers
   let
     parts =
       split (Regex.All) (regex "T") s
@@ -211,7 +214,7 @@ fromString s =
           offset =
             parseOffset timeString
         in
-          { date
+          validateTime { date
             | hour = times.hour
             , minute = times.minute
             , second = times.second
@@ -220,10 +223,10 @@ fromString s =
           }
 
       [ dateString ] ->
-        parseDate dateString
+        validateTime (parseDate dateString)
 
       _ ->
-        defaultTime
+        Err "Unparsable"
 
 -- helper for regular expressions
 matcher : Regex.Regex -> String -> List (List (Maybe String))
