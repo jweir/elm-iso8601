@@ -48,7 +48,7 @@ i = ISO8601.fromString "2016-01-01T01:30:00-04:00" |> ISO8601.toTime
 d = i |> toFloat |> Date.fromTime
 -- {} : Date.Date
 Date.year d
--- 2015 : Int 
+-- 2015 : Int
 -- uh, back to our Javascript time casting problem
 ````
 
@@ -74,12 +74,13 @@ Date.year d
 import Regex exposing (find, regex, split)
 import String
 import Array
-import ISO8601.Helpers exposing (isLeapYear)
-import Debug
+import ISO8601.Helpers exposing (..)
 import Result exposing (Result)
 
 -- Model
 
+
+import Array
 
 type alias Year       = Int
 type alias Month      = Int
@@ -89,6 +90,52 @@ type alias Minute     = Int
 type alias Second     = Int
 type alias Millisecond = Int
 type alias Offset     = ( Hour, Minute )
+
+type alias CalMonth =
+  ( String, Int, Int )
+
+
+calendar : Array.Array CalMonth
+calendar =
+  Array.fromList
+    [ ( "January", 31, 31 )
+    , ( "February", 28, 29 )
+    , ( "March", 31, 31 )
+    , ( "April", 30, 30 )
+    , ( "May", 31, 31 )
+    , ( "June", 30, 30 )
+    , ( "July", 31, 31 )
+    , ( "August", 31, 31 )
+    , ( "September", 30, 30 )
+    , ( "October", 31, 31 )
+    , ( "November", 30, 30 )
+    , ( "December", 31, 31 )
+    ]
+
+
+daysInMonth : Year -> Month -> Day
+daysInMonth year monthInt =
+  let
+    calMonth =
+      Array.get (monthInt - 1) calendar
+  in
+    case calMonth of
+      Just ( _, days, leapDays ) ->
+        if isLeapYear (year) then
+          leapDays
+        else
+          days
+
+      Nothing ->
+        0
+
+
+daysInYear : Year -> Day
+daysInYear year =
+  if isLeapYear (year) then
+    366
+  else
+    365
 
 -- integeger values for periods
 ims : Millisecond
@@ -108,7 +155,7 @@ iday = ihour * 24
 
 
 {-| Record representing the time. Offset is tuple representing the hour and minute ± from UTC.
-  
+
 -}
 type alias Time =
   { year       : Int
@@ -143,7 +190,7 @@ fmt n =
     Basics.toString n
 
 fmtMs : Millisecond -> String
-fmtMs n = 
+fmtMs n =
   if n == 0 then
     ""
   else if n < 10 then
@@ -157,17 +204,15 @@ fmtOffset : Offset -> String
 fmtOffset offset =
   case offset of
     (0,0) -> "Z"
-    (h,m) -> 
-      let 
-        symbol = 
+    (h,m) ->
+      let
+        symbol =
           if h >= 0  then
             "+"
-          else 
+          else
             "-"
       in
         symbol ++ (fmt (abs h)) ++ (fmt m)
-
-ü = 1
 
 {-| Converts a Time record to an ISO 8601 formated string.
 -}
@@ -339,52 +384,6 @@ toInt str =
 -- name, days, leap year days
 
 
-type alias CalMonth =
-  ( String, Int, Int )
-
-
-calendar : Array.Array CalMonth
-calendar =
-  Array.fromList
-    [ ( "January", 31, 31 )
-    , ( "February", 28, 29 )
-    , ( "March", 31, 31 )
-    , ( "April", 30, 30 )
-    , ( "May", 31, 31 )
-    , ( "June", 30, 30 )
-    , ( "July", 31, 31 )
-    , ( "August", 31, 31 )
-    , ( "September", 30, 30 )
-    , ( "October", 31, 31 )
-    , ( "November", 30, 30 )
-    , ( "December", 31, 31 )
-    ]
-
-
-daysInMonth : Year -> Month -> Day
-daysInMonth year monthInt =
-  let
-    calMonth =
-      Array.get (monthInt - 1) calendar
-  in
-    case calMonth of
-      Just ( _, days, leapDays ) ->
-        if isLeapYear (year) then
-          leapDays
-        else
-          days
-
-      Nothing ->
-        0
-
-
-daysInYear : Year -> Day
-daysInYear year =
-  if isLeapYear (year) then
-    366
-  else
-    365
-
 
 offset : Time -> Second
 offset time =
@@ -393,7 +392,6 @@ offset time =
       time.offset
   in
     (ihour * m) + (imin * s)
-
 
 
 
@@ -484,7 +482,7 @@ monthsFromDays year startMonth remainingDays =
       ( startMonth, remainingDays )
 
 
-type EpochRelative = Before | After 
+type EpochRelative = Before | After
 
 {-| Converts the milliseconds relative to the Unix epoch to a Time record.
 -}
@@ -495,8 +493,8 @@ fromTime ms =
 
     v =
       if ms >= 0 then
-        After 
-      else 
+        After
+      else
         Before
   in
     case v of
@@ -568,4 +566,16 @@ fromTime ms =
             , year = years
             , millisecond = milliseconds
           }
+
+validateTime time =
+  let
+    maxDays =
+      daysInMonth
+  in
+    if time.month > 12 then
+      Err "month is out of range"
+    else if time.day > daysInMonth time.year time.month then
+      Err "day is out of range"
+    else
+      Ok time
 
