@@ -73,62 +73,13 @@ Date.year d
 
 import Regex exposing (find, regex, split)
 import String
-import Array
 import ISO8601.Helpers exposing (..)
 import Result exposing (Result)
 
 -- Model
 
 
-import Array
-
 type alias Offset     = ( Int, Int )
-
-type alias CalMonth =
-  ( String, Int, Int )
-
-
-calendar : Array.Array CalMonth
-calendar =
-  Array.fromList
-    [ ( "January", 31, 31 )
-    , ( "February", 28, 29 )
-    , ( "March", 31, 31 )
-    , ( "April", 30, 30 )
-    , ( "May", 31, 31 )
-    , ( "June", 30, 30 )
-    , ( "July", 31, 31 )
-    , ( "August", 31, 31 )
-    , ( "September", 30, 30 )
-    , ( "October", 31, 31 )
-    , ( "November", 30, 30 )
-    , ( "December", 31, 31 )
-    ]
-
-
-daysInMonth : Int -> Int -> Int
-daysInMonth year monthInt =
-  let
-    calMonth =
-      Array.get (monthInt - 1) calendar
-  in
-    case calMonth of
-      Just ( _, days, leapDays ) ->
-        if isLeapYear (year) then
-          leapDays
-        else
-          days
-
-      Nothing ->
-        0
-
-
-daysInYear : Int -> Int
-daysInYear year =
-  if isLeapYear (year) then
-    366
-  else
-    365
 
 -- integeger values for periods
 ims : Int
@@ -358,28 +309,8 @@ parseOffset timeString =
         ( 0, 0 )
 
 
-toInt : String -> Int
-toInt str =
-  let
-    r =
-      String.toInt str
-  in
-    case r of
-      Ok i ->
-        i
-
-      Err _ ->
-        0
-
-
-
--- Conversion
--- name, days, leap year days
-
-
-
-offset : Time -> Int
-offset time =
+offsetToTime : Time -> Int
+offsetToTime time =
   let
     ( m, s ) =
       time.offset
@@ -409,7 +340,7 @@ toTime time =
           , (iday - ihour - (ihour * (time.hour)))
           , (ihour - imin - (imin * (time.minute)))
           , (imin - (isec * (time.second)))
-          , (offset time)
+          , (offsetToTime time)
           ]
       in
         0 - (List.sum tots - time.millisecond)
@@ -429,53 +360,13 @@ toTime time =
           , (ihour * (time.hour))
           , (imin * (time.minute))
           , (isec * (time.second))
-          , (-1 * offset time)
+          , (-1 * offsetToTime time)
           ]
       in
         (List.sum tots) + time.millisecond
 
 
 
--- from a starting year returns the ending year and remaing days
-daysToYears : EpochRelative -> Int -> Int -> ( Int, Int )
-daysToYears rel startYear remainingDays =
-  case rel of
-    After ->
-      let
-        remainingDays' =
-          remainingDays - daysInYear startYear
-      in
-        if remainingDays' > 0 then
-          daysToYears After (startYear + 1) remainingDays'
-        else
-          ( startYear, remainingDays )
-    Before ->
-      let
-        remainingDays' =
-          remainingDays + daysInYear startYear
-      in
-        if remainingDays' < 0 then
-          daysToYears Before (startYear - 1) remainingDays'
-        else
-          ( startYear,  (daysInYear startYear) + remainingDays )
-
-
--- remaingDays will alawys be less than 366
-
-
-monthsFromDays : Int -> Int -> Int -> ( Int, Int )
-monthsFromDays year startMonth remainingDays =
-  let
-    remainingDays' =
-      remainingDays - daysInMonth year startMonth
-  in
-    if remainingDays' > 0 then
-      monthsFromDays year (startMonth + 1) remainingDays'
-    else
-      ( startMonth, remainingDays )
-
-
-type EpochRelative = Before | After
 
 {-| Converts the milliseconds relative to the Unix epoch to a Time record.
 -}
@@ -511,7 +402,7 @@ fromTime ms =
             daysToYears After 1970 days
 
           ( month, daysInMonth ) =
-            monthsFromDays years 1 remaningDays
+            daysToMonths years 1 remaningDays
 
         in
           { defaultTime
@@ -532,7 +423,7 @@ fromTime ms =
             daysToYears Before 1969 totalDays
 
           ( month, daysInMonth ) =
-            monthsFromDays years 1 remaningDays
+            daysToMonths years 1 remaningDays
 
           rem = ms % iday
 
@@ -560,15 +451,38 @@ fromTime ms =
             , millisecond = milliseconds
           }
 
+validateHour : Time -> Result String Time
+validateHour time =
+  let
+      h = time.hour
+      m = time.minute
+      s = time.second
+  in
+    if h == 24 && (m+s) > 0 then
+      Err "hour is out of range"
+    else
+      if h < 0 || h > 24 then
+       Err "hour is out of range"
+    else
+      if m < 0 || m > 59 then
+        Err "minute is out of range"
+    else
+      if s < 0 || s > 59 then
+        Err "second is out of range"
+    else
+      Ok time
+
+validateTime : Time -> Result String Time
 validateTime time =
   let
     maxDays =
       daysInMonth
   in
-    if time.month > 12 then
+    if time.month < 1 || time.month > 12 then
       Err "month is out of range"
-    else if time.day > daysInMonth time.year time.month then
-      Err "day is out of range"
+    else 
+      if time.day < 1 || time.day > daysInMonth time.year time.month then
+        Err "day is out of range"
     else
-      Ok time
+      validateHour time
 

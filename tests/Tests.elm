@@ -157,8 +157,15 @@ errorResults =
         Ok _ -> "" |> equals expected
 
   in suite "errors" [
-    test "2014-13-01" "month is out of range"
-  , test "2014-02-30" "day is out of range"
+    test "2014-00-01" "month is out of range"
+  , test "2014-12-00" "day is out of range"
+  , test "2014-13-01" "month is out of range"
+  , test "2014-02-29" "day is out of range"
+  , test "2016-02-29" ""
+  , test "2014-02-01T24:00:00" "" -- this is allowed as the interval the day transitions
+  , test "2014-02-01T24:00:01" "hour is out of range" -- this is not
+  , test "2014-02-01T12:61:01" "minute is out of range" -- this is not
+  , test "2014-02-01T12:59:60" "second is out of range" -- this is not
   , test "2014-12-01 is a cow" "unexpected text"
   , test "words" "unexpected text"
   ]
