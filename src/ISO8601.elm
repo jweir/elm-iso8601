@@ -43,7 +43,7 @@ import ISO8601
 import Date
 
 i = ISO8601.fromString "2016-01-01T01:30:00-04:00" |> ISO8601.toTime
--- 1451626200000 : ISO8601.Millisecond
+-- 1451626200000 : ISO8601.Int
 
 d = i |> toFloat |> Date.fromTime
 -- {} : Date.Date
@@ -82,14 +82,7 @@ import Result exposing (Result)
 
 import Array
 
-type alias Year       = Int
-type alias Month      = Int
-type alias Day        = Int
-type alias Hour       = Int
-type alias Minute     = Int
-type alias Second     = Int
-type alias Millisecond = Int
-type alias Offset     = ( Hour, Minute )
+type alias Offset     = ( Int, Int )
 
 type alias CalMonth =
   ( String, Int, Int )
@@ -113,7 +106,7 @@ calendar =
     ]
 
 
-daysInMonth : Year -> Month -> Day
+daysInMonth : Int -> Int -> Int
 daysInMonth year monthInt =
   let
     calMonth =
@@ -130,7 +123,7 @@ daysInMonth year monthInt =
         0
 
 
-daysInYear : Year -> Day
+daysInYear : Int -> Int
 daysInYear year =
   if isLeapYear (year) then
     366
@@ -138,19 +131,19 @@ daysInYear year =
     365
 
 -- integeger values for periods
-ims : Millisecond
+ims : Int
 ims = 1
 
-isec : Second
+isec : Int
 isec = ims * 1000
 
-imin : Minute
+imin : Int
 imin = isec * 60
 
-ihour : Hour
+ihour : Int
 ihour = imin * 60
 
-iday : Day
+iday : Int
 iday = ihour * 24
 
 
@@ -189,7 +182,7 @@ fmt n =
   else
     Basics.toString n
 
-fmtMs : Millisecond -> String
+fmtMs : Int -> String
 fmtMs n =
   if n == 0 then
     ""
@@ -385,7 +378,7 @@ toInt str =
 
 
 
-offset : Time -> Second
+offset : Time -> Int
 offset time =
   let
     ( m, s ) =
@@ -444,7 +437,7 @@ toTime time =
 
 
 -- from a starting year returns the ending year and remaing days
-daysToYears : EpochRelative -> Year -> Day -> ( Year, Day )
+daysToYears : EpochRelative -> Int -> Int -> ( Int, Int )
 daysToYears rel startYear remainingDays =
   case rel of
     After ->
@@ -470,7 +463,7 @@ daysToYears rel startYear remainingDays =
 -- remaingDays will alawys be less than 366
 
 
-monthsFromDays : Year -> Month -> Day -> ( Month, Day )
+monthsFromDays : Int -> Int -> Int -> ( Int, Int )
 monthsFromDays year startMonth remainingDays =
   let
     remainingDays' =
