@@ -9,7 +9,7 @@ count = 500000
 
 time n =
   let
-      x = ISO8601.fromTime n |> ISO8601.toString |> ISO8601.fromString |> ISO8601.toTime
+      x = ISO8601.fromTime n |> ISO8601.toString |> ISO8601.fromString
   in
     case n < count of
       True ->
