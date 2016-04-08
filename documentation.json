@@ -1,24 +1,36 @@
 [
   {
     "name": "ISO8601",
-    "comment": "\n\n@docs parse, toUnix, fromUnix\n\n-- reading\n--    http://www.oracle.com/technetwork/articles/java/jf14-date-time-2125367.html\n--    https://golang.org/src/time/format.go?s=22436:22482#L722\n--    https://github.com/rust-lang/rust/issues/14657\n--    https://github.com/ThreeTen/threetenbp\n--\n\n",
-    "aliases": [],
+    "comment": " This package provides functionality for working with time and strings based\non the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`\n\nIt is a \"pure\" Elm package – no Native bindings to Javascript's Date are used.\nThis does have a performance cost. This package is about 10x slower than the\nnative Date library. But there are advantages:\n\n* _Does not cast the time in the local timezone_\n* Preserves the timezone offset values\n* Detects invalid dates\n* Provides a record with easy access to the time's components\n\nIf you have worked with time in Javascript you may have come\nacross issues where the time is recast in the local timezone – not fun.\n\nFor example with Elm.Date (which uses Javascript)\n\n````elm\nDate.fromString \"2016-01-01T01:30:00-04:00\" \\\n  |> Result.map (\\d -> Date.year d)\n--Ok 2015 : Result.Result String Int\n````\n\nWhile the above is the correct time, it is looses its context – year is 2015!\n\nNow with ISO8601\n````elm\nimport ISO8601\n\nt = ISO8601.fromString \"2016-01-01T01:30:00-04:00\"\n-- Ok { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = (-4,0) }\n    : Result.Result String ISO8601.Time\n\nt |> Result.map .year\n-- Ok 2016 : Result.Result String Int\n\n````\n\nISO8601 strives to offer better error handling:\n````elm\nimport Date\nimport ISO8601\n\n-- The below is not a valid date...\nDate.fromString \"2014-02-30\"\n-- Ok {} : Result.Result String Date.Date\n\nISO8601.fromString \"2014-02-30\"\n--- Err (\"day is out of range\") : Result.Result String ISO8601.Time\n````\n\nError messages specify the first error found:\n````elm\n\nDate.fromString \"2014-04-02T13:01:61\"\n-- Err (\"unable to parse '2014-04-02T13:01:61' as a date\")\n\nISO8601.fromString \"2014-04-02T13:01:61\"\n-- Err (\"second is out of range\") : Result.Result String ISO8601.Time\n````\n\n# Time record\n@docs Time\n\n# Parsing\n@docs fromString, toString\n\n# Time conversion\n@docs toTime, fromTime\n",
+    "aliases": [
+      {
+        "name": "Time",
+        "comment": " Record representing the time. Offset is tuple representing the hour and minute ± from UTC.\n\n",
+        "args": [],
+        "type": "{ year : Int , month : Int , day : Int , hour : Int , minute : Int , second : Int , millisecond : Int , offset : ( Int, Int ) }"
+      }
+    ],
     "types": [],
     "values": [
       {
-        "name": "fromUnix",
-        "comment": " TODO Document\n\nNOTE: This uses seconds, Javascript and Elm Date use milliseconds\n",
-        "type": "ISO8601.Second -> ISO8601.Time"
+        "name": "fromString",
+        "comment": " Given an ISO 8601 compatible string, returns a Time record.\n\n````elm\nISO8601.fromString \"2016-01-01T01:30:00-04:00\"\n-- { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = (-4,0) }\n    : ISO8601.Time\nISO8601.fromString \"2016-11-07\"\n--{ year = 2016, month = 11, day = 7, hour = 0, minute = 0, second = 0, millisecond = 0, offset = (0,0) }\n    : ISO8601.Time\n```\n\n",
+        "type": "String -> Result.Result String ISO8601.Time"
       },
       {
-        "name": "parse",
-        "comment": " TODO Document\n",
-        "type": "String -> ISO8601.Time"
+        "name": "fromTime",
+        "comment": " Converts the milliseconds relative to the Unix epoch to a Time record.\n",
+        "type": "Int -> ISO8601.Time"
       },
       {
-        "name": "toUnix",
-        "comment": " Converts the Time to seconds starting at the Unix epoch\n\nTODO examples\n\nNOTE: This uses seconds, Javascript and Elm Date use milliseconds\n",
-        "type": "ISO8601.Time -> ISO8601.Second"
+        "name": "toString",
+        "comment": " Converts a Time record to an ISO 8601 formated string.\n",
+        "type": "ISO8601.Time -> String"
+      },
+      {
+        "name": "toTime",
+        "comment": " Converts the Time to milliseconds relative to the Unix epoch: `1970-01-01T00:00:00Z`\n",
+        "type": "ISO8601.Time -> Int"
       }
     ],
     "generated-with-elm-version": "0.16.0"

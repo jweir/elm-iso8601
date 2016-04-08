@@ -8,55 +8,63 @@ This does have a performance cost. This package is about 10x slower than the
 native Date library. But there are advantages:
 
 * _Does not cast the time in the local timezone_
-* Preserves the timezone offset values.
-* Always returns a time. Invalid input results in a time of `000-01-01T00:00:00Z`
+* Preserves the timezone offset values
+* Detects invalid dates
+* Provides a record with easy access to the time's components
 
-If you have worked with timestamps in a browser you may have come
-across issues where the time is recast in the local timezone.
+If you have worked with time in Javascript you may have come
+across issues where the time is recast in the local timezone – not fun.
 
-For example in Javascript
+For example with Elm.Date (which uses Javascript)
 
-````javascript
-new Date(Date.parse("2016-01-01T01:30:00-04:00"))
-// Thu Dec 31 2015 21:30:00 GMT-0800 (PST)
+````elm
+Date.fromString "2016-01-01T01:30:00-04:00" \
+  |> Result.map (\d -> Date.year d)
+--Ok 2015 : Result.Result String Int
 ````
 
-While the above is the correct time, it is looses its context – if you grab the year it is 2015!
+While the above is the correct time, it is looses its context – year is 2015!
 
-Now using ISO8601
+Now with ISO8601
 ````elm
 import ISO8601
 
 t = ISO8601.fromString "2016-01-01T01:30:00-04:00"
--- { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = (-4,0) }
-    : ISO8601.Time
+-- Ok { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = (-4,0) }
+    : Result.Result String ISO8601.Time
 
-ISO8601.toString t
--- "2016-01-01T01:30:00-0400" : String
+t |> Result.map .year
+-- Ok 2016 : Result.Result String Int
 
 ````
 
-Example of compatibility with `Elm.Date`
+ISO8601 strives to offer better error handling:
+````elm
+import Date
+import ISO8601
+
+-- The below is not a valid date...
+Date.fromString "2014-02-30"
+-- Ok {} : Result.Result String Date.Date
+
+ISO8601.fromString "2014-02-30"
+--- Err ("day is out of range") : Result.Result String ISO8601.Time
+````
+
+Error messages specify the first error found:
 ````elm
 
-import ISO8601
-import Date
+Date.fromString "2014-04-02T13:01:61"
+-- Err ("unable to parse '2014-04-02T13:01:61' as a date")
 
-i = ISO8601.fromString "2016-01-01T01:30:00-04:00" |> ISO8601.toTime
--- 1451626200000 : ISO8601.Int
-
-d = i |> toFloat |> Date.fromTime
--- {} : Date.Date
-Date.year d
--- 2015 : Int
--- uh, back to our Javascript time casting problem
+ISO8601.fromString "2014-04-02T13:01:61"
+-- Err ("second is out of range") : Result.Result String ISO8601.Time
 ````
 
-
-# Definition
+# Time record
 @docs Time
 
-# String parsing and conversion
+# Parsing
 @docs fromString, toString
 
 # Time conversion
