@@ -6,9 +6,9 @@ import ISO8601.Helpers
 import Date
 
 
-testTime time year month day hour minute second millisecond offset =
+testTime message time year month day hour minute second millisecond offset =
   suite
-    ""
+    message
     [ time.year |> equals year
     , time.month |> equals month
     , time.day |> equals day
@@ -32,7 +32,7 @@ testParse string =
     time =
       ISO8601.fromString string
   in
-    testTime (unWrapTime time)
+    testTime string (unWrapTime time)
 
 
 parsingTests : Test
@@ -51,7 +51,15 @@ parsingTests =
     , testParse "2006-01-02T15:04:05-0700" 2006 1 2 15 4 5 0 ( -7, 0 )
     , testParse "2006-01-02T15:04:05-1200" 2006 1 2 15 4 5 0 ( -12, 0 )
     , testParse "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 )
+
+    -- resoltion greater than milliseconds is rounded
+    , testParse "2015-03-02T15:16:17.0009" 2015 3 2 15 16 17 1 ( 0, 0 )
+    , testParse "2015-03-02T15:16:17.00049999" 2015 3 2 15 16 17 0 ( 0, 0 )
+
+    , testParse "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 )
     , testParse "1066-12-03T10:01:59.022+00:00" 1066 12 3 10 1 59 22 ( 0, 0 )
+    , testParse "1066-12-03T10:01:59.5+00:00" 1066 12 3 10 1 59 500 ( 0, 0 )
+    -- comma instead of period
     , testParse "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 ( 0, 0 )
     ]
 
@@ -72,7 +80,7 @@ toUnixTest =
         -- Unix Epoch in New Dehli
       , assert "1970-01-01T05:30:00+0530" 0
       , assert "1969-12-31T17:00:00-0700" 0
-      , assert "1969-12-31T23:59:59.999Z" -1
+      , assert "1969-12-31T23:59:59.099Z" -901
       , assert "1969-12-31T23:59:59Z" -1000
       , assert "1969-12-31T22:59:59Z" -3601000
       , assert "1918-11-11T11:00:00Z" -1613826000000
@@ -114,7 +122,7 @@ testFromUnix seconds =
     time =
       ISO8601.fromTime seconds
   in
-    testTime time
+    testTime (toString seconds) time
 
 
 fromUnixTest : Test

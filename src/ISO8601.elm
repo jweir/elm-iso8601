@@ -188,103 +188,77 @@ fromString s =
   -- validate the string
   -- validate the numbers
   let
-    parts =
-      split (Regex.All) (regex "T") s
+    parts = List.map .submatches (iso8601Regex s)
+
+    unwrap : Maybe String -> String -> Int
+    unwrap x d =
+      x |> Maybe.withDefault d |> toInt
   in
     case parts of
-      [ dateString, timeString ] ->
+      [[year, month, day, hour, minute, second, millisecond, offset, invalid]] ->
+        case invalid of
+          Just _ -> Err "unexpected text"
+          Nothing ->
+            validateTime {
+              year = unwrap year "0",
+              month = unwrap month "1",
+              day = unwrap day "1",
+              hour = unwrap hour "0",
+              minute = unwrap minute "0",
+              second = unwrap second "0",
+              -- since the ms will possibly start with 0, add the 1 and get the remainder
+              -- ms' = (toInt ("1" ++ ms)) % 1000
+              millisecond = parseMilliseconds millisecond,
+              offset = parseOffset offset
+            }
+      _ ->
         let
-          date =
-            parseDate dateString
-
-          times =
-            parseTime timeString
-
-          offset =
-            parseOffset timeString
+          _ = Debug.log s parts
         in
-          validateTime { date
-            | hour = times.hour
-            , minute = times.minute
-            , second = times.second
-            , millisecond = times.millisecond
-            , offset = offset
-          }
-
-      [ dateString ] ->
-        validateTime (parseDate dateString)
-
-      _ ->
-        Err "Unparsable"
-
--- helper for regular expressions
-matcher : Regex.Regex -> String -> List (List (Maybe String))
-matcher re src =
-  let
-    matches =
-      find (Regex.AtMost 1) re src
-  in
-    List.map .submatches matches
+          Err "unknown error"
 
 
--- parses the date portion of the string
-parseDate : String -> Time
-parseDate dateString =
-  let
-    dates =
-      matcher (regex "(\\d{4})-?(\\d{2})?-?(\\d{2})?") dateString
-  in
-    case dates of
-      [ [ Just year, Just month, Just day ] ] ->
-        { defaultTime | year = toInt year, month = toInt month, day = toInt day }
+iso8601Regex : String -> List Regex.Match
+iso8601Regex =
+  Regex.find (Regex.AtMost 1) (
+    Regex.regex (
+      "(\\d{4})?-?"    ++ -- year
+      "(\\d{2})?-?"   ++ -- month
+      "(\\d{2})?"     ++ -- DAY
+      "T?"            ++ -- Time indicator
+      "(\\d{2})?:?"   ++ -- hour
+      "(\\d{2})?:?"   ++ -- minute
+      "(\\d{2})?"     ++ -- second
+      "([.,]\\d{1,})?" ++ -- fractional second
+      "(Z|[+-]\\d{2}:?\\d{2})?" ++  -- offset
+      "(.*)?"         -- invalid text
+      )
+      )
 
-      [ [ Just year, Just month, Nothing ] ] ->
-        { defaultTime | year = toInt year, month = toInt month }
-
-      [ [ Just year, Nothing, Nothing ] ] ->
-        { defaultTime | year = toInt year }
-
-      _ ->
-        defaultTime
-
-
--- parses the time portion of the string
-parseTime : String -> Time
-parseTime timeString =
-  let
-    times =
-      -- NOTE ISO8601 states any component (hour, minute or second) supports fracational times
-      -- but only one. This library only supports fractional seconds for now
-      -- hh:mm:ss[.,]fractional seconds
-      matcher (regex "(\\d\\d):?(\\d\\d)?:?(\\d\\d)?[.,]?(\\d{3})?") timeString
-  in
-    case times of
-      [ [ Just hour, Just minute, Just second, Just ms ] ] ->
-        let
-            -- since the ms will possibly start with 0, add the 1 and get the remainder
-            ms' = (toInt ("1" ++ ms)) % 1000
-        in
-            { defaultTime | hour = toInt hour, minute = toInt minute, second = toInt second, millisecond =  ms' }
-
-      [ [ Just hour, Just minute, Just second, Nothing ] ] ->
-        { defaultTime | hour = toInt hour, minute = toInt minute, second = toInt second }
-
-      [ [ Just hour, Just minute, Nothing, Nothing ] ] ->
-        { defaultTime | hour = toInt hour, minute = toInt minute }
-
-      [ [ Just hour, Nothing, Nothing, Nothing ] ] ->
-        { defaultTime | hour = toInt hour }
-
-      _ ->
-        defaultTime
+parseMilliseconds : Maybe String -> Int
+parseMilliseconds msString =
+  case msString of
+    Nothing -> 0
+    Just s ->
+      let
+        decimalStr = Regex.replace (Regex.AtMost 1) (Regex.regex "[,.]") (\_ -> "0.") s
+        decimal = String.toFloat decimalStr |> Result.toMaybe |> Maybe.withDefault 0.0
+      in
+        1000 * decimal |> round
 
 
-parseOffset : String -> Offset
+parseOffset : Maybe String -> Offset
 parseOffset timeString =
   let
+
+    re = Regex.regex "(Z|([+-]\\d{2}:?\\d{2}))?" -- offset
     -- offset can be Z or ±h:mm ±hhmm or ±hh
-    parts =
-      matcher (regex "([-+])(\\d\\d):?(\\d\\d)") timeString
+    match =
+      timeString
+        |> Maybe.withDefault ""
+        |> find (Regex.AtMost 1) (regex "([-+])(\\d\\d):?(\\d\\d)")
+
+    parts = List.map .submatches match
 
     setHour modifier hour =
       case modifier of
@@ -480,7 +454,7 @@ validateTime time =
   in
     if time.month < 1 || time.month > 12 then
       Err "month is out of range"
-    else 
+    else
       if time.day < 1 || time.day > daysInMonth time.year time.month then
         Err "day is out of range"
     else
