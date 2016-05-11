@@ -64,6 +64,34 @@ parsingTests =
     , testParse "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 ( 0, 0 )
     ]
 
+dayOfWeekTest : Test
+dayOfWeekTest =
+  let
+    assert: String -> DayOfWeek -> Test
+    assert str day =
+      ISO8601.fromString str
+        |> unWrapTime
+        |> ISO8601.dayOfWeek
+        |> equals day
+  in
+    suite
+      "Day of week"
+      [
+        assert "3000-10-01" Wed
+      , assert "2099-12-12" Sat
+      , assert "2016-04-12" Tue
+      , assert "1970-01-02" Fri
+      , assert "1970-01-01" Thu
+      , assert "1969-12-30" Tue
+      , assert "1969-12-01" Mon
+      , assert "1900-03-01" Thu
+      , assert "1666-12-26" Sun
+      -- no support for the Julian calendar
+      , assert "1582-10-09" Sat
+      , assert "1582-10-01" Fri
+      , assert "0001-01-01" Mon
+      ]
+
 
 toUnixTest : Test
 toUnixTest =
@@ -189,12 +217,14 @@ errorResults =
 all =
   suite
     "ISO8601"
-    [ parsingTests
+    [
+      parsingTests
     , toUnixTest
     , fromUnixTest
     , leapYearTests
     , testElmDateCompatibility
     , errorResults
+    , dayOfWeekTest
     ]
 
 

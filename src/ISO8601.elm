@@ -1,4 +1,5 @@
-module ISO8601 (fromString, toTime, fromTime, toString, Time) where
+module ISO8601
+  exposing (fromString, toTime, fromTime, toString, dayOfWeek, Time, DayOfWeek(..))
 
 {-| This package provides functionality for working with time and strings based
 on the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`
@@ -62,13 +63,13 @@ ISO8601.fromString "2014-04-02T13:01:61"
 ````
 
 # Time record
-@docs Time
+@docs Time, DayOfWeek
 
 # Parsing
 @docs fromString, toString
 
 # Time conversion
-@docs toTime, fromTime
+@docs toTime, fromTime, dayOfWeek
 -}
 
 -- reading
@@ -83,6 +84,7 @@ import Regex exposing (find, regex, split)
 import String
 import ISO8601.Helpers exposing (..)
 import Result exposing (Result)
+import Array
 
 -- Model
 
@@ -133,6 +135,8 @@ defaultTime =
   , offset     = ( 0, 0 )
   }
 
+{-| Represents one of the seven days of the week -}
+type DayOfWeek = Mon | Tue | Wed | Thu | Fri | Sat | Sun
 
 fmt : Int -> String
 fmt n =
@@ -467,4 +471,30 @@ validateTime time =
         Err "day is out of range"
     else
       validateHour time
+
+daysFromEpoch =
+  Array.fromList [Thu, Fri, Sat, Sun, Mon, Tue, Wed ]
+
+{-| Returns the day of the week from the Time record-}
+dayOfWeek : Time -> DayOfWeek
+dayOfWeek time =
+  let
+      t = {
+        defaultTime
+        | year = time.year
+        , month = time.month
+        , day = time.day}
+
+      t' = toTime t
+      -- Thursday is the unix epoch
+      days = t' // iday
+
+      _ = Debug.log "wd" (toString t, t', days, (days % 7))
+
+      day =
+        Array.get (days % 7) daysFromEpoch
+  in
+      case day of
+        Just d -> d
+        Nothing -> Sun
 
