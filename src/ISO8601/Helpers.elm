@@ -1,12 +1,12 @@
-module ISO8601.Helpers (EpochRelative (..), daysToYears, daysToMonths, isLeapYear, daysInYear, daysInMonth, toInt) where
+module ISO8601.Helpers exposing (EpochRelative (..), daysToYears, daysToMonths, isLeapYear, daysInYear, daysInMonth, toInt)
 
 import Array
 import String
 
 toInt : String -> Int
 toInt str =
-  String.toInt str 
-    |> Result.toMaybe 
+  String.toInt str
+    |> Result.toMaybe
     |> Maybe.withDefault(0)
 
 isLeapYear : Int -> Bool
@@ -14,20 +14,24 @@ isLeapYear year =
   let
     -- A If the year is evenly divisible by 4, go to step B
     a =
-      year % 4
+      0 == year % 4
 
     -- B If the year is evenly divisible by 100, go to step C
     b =
-      year % 100 % 2
+      0 == year % 100
 
     -- C If the year is evenly divisible by 400, go to step D
     c =
-      year % 400 % 2
+      0 == year % 400
+
   in
     case [ a, b, c ] of
-      [ 0, 0, 0 ] ->
+      [ True, True, True ] ->
         True
-
+      [ True, False, _ ] ->
+        True
+      [ True, True, False ] ->
+        False
       _ ->
         False
 
@@ -117,3 +121,12 @@ daysToMonths year startMonth remainingDays =
     else
       ( startMonth, remainingDays )
 
+yearsToDays : Int -> Int -> Int -> Int
+yearsToDays ending current days =
+  if ending > current then
+      yearsToDays
+        ending
+        (current + 1)
+        (daysInYear current)
+    else
+      days

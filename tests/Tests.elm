@@ -1,7 +1,8 @@
-module Tests (..) where
+module Tests exposing (..)
 
 import ElmTest exposing (..)
-import ISO8601
+import Html
+import ISO8601 exposing(DayOfWeek(..))
 import ISO8601.Helpers
 import Date
 
@@ -87,6 +88,7 @@ toUnixTest =
       , assert "1918-11-11T09:00:00-0200" -1613826000000
       , assert "2016-02-04T05:06:07Z" 1454562367000
       , assert "2016-02-04T05:06:07.123Z" 1454562367123
+      , assert "1066-12-12T00:01:02Z" -28497657538000
       ]
 
 
@@ -137,6 +139,7 @@ fromUnixTest =
     , testFromUnix -1 1969 12 31 23 59 59 999 ( 0, 0 )
     , testFromUnix -2000 1969 12 31 23 59 58 0 ( 0, 0 )
     , testFromUnix -1456707723000 1923 11 3 22 57 57 0 ( 0, 0 )
+    , testFromUnix -28497657538000 1066 12 12 00 01 02 0 ( 0, 0 )
     ]
 
 
@@ -148,6 +151,11 @@ leapYearTests =
       , ( 1808, True )
       , ( 1818, False )
       , ( 2015, False )
+      , ( 2000, True )
+      , ( 1900, False )
+      , ( 1800, False )
+      , ( 1600, True )
+      , ( 1500, False )
       , ( 2016, True )
       ]
 
@@ -191,4 +199,7 @@ all =
 
 
 main =
-  elementRunner all
+  Html.pre []
+  [
+    Html.text (stringRunner all)
+    ]
