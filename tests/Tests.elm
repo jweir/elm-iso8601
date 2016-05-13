@@ -7,7 +7,7 @@ import ISO8601.Helpers
 import Date
 
 
-testTime message time year month day hour minute second millisecond offset =
+assertTime message time year month day hour minute second millisecond offset =
     suite message
         [ time.year |> equals year
         , time.month |> equals month
@@ -27,42 +27,38 @@ unWrapTime time =
         |> Maybe.withDefault (ISO8601.fromTime -100000)
 
 
-testParse string =
+testParsing : Test
+testParsing =
     let
-        time =
-            ISO8601.fromString string
+        assert string =
+            string |> ISO8601.fromString |> unWrapTime |> assertTime string
     in
-        testTime string (unWrapTime time)
+        suite "Parsing"
+            [ assert "2006" 2006 1 1 0 0 0 0 ( 0, 0 )
+            , assert "2006-11" 2006 11 1 0 0 0 0 ( 0, 0 )
+            , assert "2015-03-02" 2015 3 2 0 0 0 0 ( 0, 0 )
+            , assert "2015-03-02T15" 2015 3 2 15 0 0 0 ( 0, 0 )
+            , assert "2015-03-02T15:16" 2015 3 2 15 16 0 0 ( 0, 0 )
+            , assert "2015-03-02T15:16:17" 2015 3 2 15 16 17 0 ( 0, 0 )
+            , assert "2006-01-02T15:04:05+00:00" 2006 1 2 15 4 5 0 ( 0, 0 )
+            , assert "2006-01-02T15:04:05+05:30" 2006 1 2 15 4 5 0 ( 5, 30 )
+            , assert "2006-01-02T15:04:05+0530" 2006 1 2 15 4 5 0 ( 5, 30 )
+            , assert "2006-01-02T15:04:05-0700" 2006 1 2 15 4 5 0 ( -7, 0 )
+            , assert "2006-01-02T15:04:05-1200" 2006 1 2 15 4 5 0 ( -12, 0 )
+            , assert "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 )
+              -- resoltion greater than milliseconds is rounded
+            , assert "2015-03-02T15:16:17.0009" 2015 3 2 15 16 17 1 ( 0, 0 )
+            , assert "2015-03-02T15:16:17.00049999" 2015 3 2 15 16 17 0 ( 0, 0 )
+            , assert "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 )
+            , assert "1066-12-03T10:01:59.022+00:00" 1066 12 3 10 1 59 22 ( 0, 0 )
+            , assert "1066-12-03T10:01:59.5+00:00" 1066 12 3 10 1 59 500 ( 0, 0 )
+              -- comma instead of period
+            , assert "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 ( 0, 0 )
+            ]
 
 
-parsingTests : Test
-parsingTests =
-    suite "Parsing"
-        [ testParse "2006" 2006 1 1 0 0 0 0 ( 0, 0 )
-        , testParse "2006-11" 2006 11 1 0 0 0 0 ( 0, 0 )
-        , testParse "2015-03-02" 2015 3 2 0 0 0 0 ( 0, 0 )
-        , testParse "2015-03-02T15" 2015 3 2 15 0 0 0 ( 0, 0 )
-        , testParse "2015-03-02T15:16" 2015 3 2 15 16 0 0 ( 0, 0 )
-        , testParse "2015-03-02T15:16:17" 2015 3 2 15 16 17 0 ( 0, 0 )
-        , testParse "2006-01-02T15:04:05+00:00" 2006 1 2 15 4 5 0 ( 0, 0 )
-        , testParse "2006-01-02T15:04:05+05:30" 2006 1 2 15 4 5 0 ( 5, 30 )
-        , testParse "2006-01-02T15:04:05+0530" 2006 1 2 15 4 5 0 ( 5, 30 )
-        , testParse "2006-01-02T15:04:05-0700" 2006 1 2 15 4 5 0 ( -7, 0 )
-        , testParse "2006-01-02T15:04:05-1200" 2006 1 2 15 4 5 0 ( -12, 0 )
-        , testParse "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 )
-          -- resoltion greater than milliseconds is rounded
-        , testParse "2015-03-02T15:16:17.0009" 2015 3 2 15 16 17 1 ( 0, 0 )
-        , testParse "2015-03-02T15:16:17.00049999" 2015 3 2 15 16 17 0 ( 0, 0 )
-        , testParse "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 )
-        , testParse "1066-12-03T10:01:59.022+00:00" 1066 12 3 10 1 59 22 ( 0, 0 )
-        , testParse "1066-12-03T10:01:59.5+00:00" 1066 12 3 10 1 59 500 ( 0, 0 )
-          -- comma instead of period
-        , testParse "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 ( 0, 0 )
-        ]
-
-
-dayOfWeekTest : Test
-dayOfWeekTest =
+testDayOfWeek : Test
+testDayOfWeek =
     let
         assert : String -> DayOfWeek -> Test
         assert str day =
@@ -88,8 +84,8 @@ dayOfWeekTest =
             ]
 
 
-toUnixTest : Test
-toUnixTest =
+testToUnix : Test
+testToUnix =
     let
         assert str seconds =
             suite str
@@ -113,8 +109,27 @@ toUnixTest =
             ]
 
 
-testElmDateCompatibility : Test
-testElmDateCompatibility =
+fromUnixTest : Test
+fromUnixTest =
+    let
+        assert millseconds =
+            millseconds |> ISO8601.fromTime |> assertTime (toString millseconds)
+    in
+        suite "fromTime"
+            [ assert 0 1970 1 1 0 0 0 0 ( 0, 0 )
+            , assert 1 1970 1 1 0 0 0 1 ( 0, 0 )
+            , assert 3661123 1970 1 1 1 1 1 123 ( 0, 0 )
+            , assert 86400000 1970 1 2 0 0 0 0 ( 0, 0 )
+            , assert 1456707723000 2016 2 29 1 2 3 0 ( 0, 0 )
+            , assert -1 1969 12 31 23 59 59 999 ( 0, 0 )
+            , assert -2000 1969 12 31 23 59 58 0 ( 0, 0 )
+            , assert -1456707723000 1923 11 3 22 57 57 0 ( 0, 0 )
+            , assert -28497657538000 1066 12 12 0 1 2 0 ( 0, 0 )
+            ]
+
+
+testJSDate : Test
+testJSDate =
     let
         assert str =
             let
@@ -139,30 +154,7 @@ testElmDateCompatibility =
             ]
 
 
-testFromUnix seconds =
-    let
-        time =
-            ISO8601.fromTime seconds
-    in
-        testTime (toString seconds) time
-
-
-fromUnixTest : Test
-fromUnixTest =
-    suite "fromTime"
-        [ testFromUnix 0 1970 1 1 0 0 0 0 ( 0, 0 )
-        , testFromUnix 1 1970 1 1 0 0 0 1 ( 0, 0 )
-        , testFromUnix 3661123 1970 1 1 1 1 1 123 ( 0, 0 )
-        , testFromUnix 86400000 1970 1 2 0 0 0 0 ( 0, 0 )
-        , testFromUnix 1456707723000 2016 2 29 1 2 3 0 ( 0, 0 )
-        , testFromUnix -1 1969 12 31 23 59 59 999 ( 0, 0 )
-        , testFromUnix -2000 1969 12 31 23 59 58 0 ( 0, 0 )
-        , testFromUnix -1456707723000 1923 11 3 22 57 57 0 ( 0, 0 )
-        , testFromUnix -28497657538000 1066 12 12 0 1 2 0 ( 0, 0 )
-        ]
-
-
-leapYearTests =
+testLeapYear =
     let
         expectations =
             [ ( 1804, True )
@@ -184,7 +176,7 @@ leapYearTests =
         suite "Leap Year" (List.map assertion expectations)
 
 
-errorResults =
+testErrors =
     let
         test : String -> String -> Test
         test timeStr expected =
@@ -223,55 +215,60 @@ rangeAssert stop inc current =
         str =
             ISO8601.toString time
     in
-        if current < stop then
+        if current >= stop then
+            ( current == stop, current )
+        else
             case str |> ISO8601.fromString of
+                -- there is a conversion error
                 Err _ ->
                     ( False, current )
 
                 Ok time' ->
+                    -- when converting back it should equal the starting value
                     if ISO8601.toTime (time') == current then
                         rangeAssert stop inc (current + inc)
                     else
                         ( False, current )
-        else
-            ( True, current )
 
 
+{-|
+testRange iterates by starting at a point in time and advancing by the given increment.
+Along the way it tests converting from UNIX time, into a string and back,
+expecting no errors and the identical final value as the starting value.
+-}
 testRange =
     let
-        end =
-            1459530703000
+        fstop =
+            (ISO8601.fromString "2016-04-01T00:01:00.000Z" |> unWrapTime |> ISO8601.toTime)
 
-        inc =
-            1000
+        f =
+            rangeAssert fstop
+                1000
+                (ISO8601.fromString "2016-03-31T23:00:00Z" |> unWrapTime |> ISO8601.toTime)
 
-        r =
-            rangeAssert end 100000 (end - (1000 * 60 * 60 * 24 * 30))
-
-        bstart =
-            -312940800000
-
-        bend =
-            bstart + 1000
+        bstop =
+            (ISO8601.fromString "1960-04-01T00:01:00.000Z" |> unWrapTime |> ISO8601.toTime)
 
         b =
-            rangeAssert bend 100 (bstart - 100)
+            rangeAssert bstop
+                1000
+                (ISO8601.fromString "1960-03-31T23:00:00Z" |> unWrapTime |> ISO8601.toTime)
     in
         suite "range"
-            [ r |> equals ( True, end )
-            , b |> equals ( True, bend )
+            [ f |> equals ( True, fstop )
+            , b |> equals ( True, bstop )
             ]
 
 
 all =
     suite "ISO8601"
-        [ parsingTests
-        , toUnixTest
+        [ testParsing
+        , testToUnix
         , fromUnixTest
-        , leapYearTests
-        , testElmDateCompatibility
-        , errorResults
-        , dayOfWeekTest
+        , testLeapYear
+        , testJSDate
+        , testErrors
+        , testDayOfWeek
         , testRange
         ]
 
