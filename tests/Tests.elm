@@ -214,6 +214,40 @@ errorResults =
   , test "words" "unexpected text"
   ]
 
+rangeAssert : Int -> Int -> Int -> (Bool, Int)
+rangeAssert stop inc current =
+  let
+    time = ISO8601.fromTime current
+    str = ISO8601.toString time
+
+  in
+    if current < stop then
+      case str |> ISO8601.fromString of
+        Err _ -> (False, current)
+        Ok time' ->
+          if ISO8601.toTime(time') == current then
+            rangeAssert stop inc (current + inc)
+          else
+            (False, current)
+    else
+      (True, current)
+
+testRange =
+  let
+    end = 1459530703000
+    inc = 1000
+    r = rangeAssert end 100000 (end - (1000 * 60 * 60 * 24 * 30))
+
+    bstart = -312940800000
+    bend = bstart + 1000
+    b = rangeAssert bend 100 (bstart - 100)
+  in
+      suite "range"
+        [ r |> equals (True, end)
+        , b |> equals (True, bend) ]
+
+
+
 all =
   suite
     "ISO8601"
@@ -225,6 +259,7 @@ all =
     , testElmDateCompatibility
     , errorResults
     , dayOfWeekTest
+    , testRange
     ]
 
 
