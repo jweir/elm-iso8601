@@ -322,14 +322,14 @@ fromTime ms =
             daysToYears After 1970 days
 
           ( month, daysInMonth ) =
-            daysToMonths years 1 remainingDays
+            daysToMonths years 1 (remainingDays + 1)
 
         in
           { defaultTime
             | second = seconds
             , minute = minutes
             , hour = hours
-            , day = daysInMonth + 1
+            , day = daysInMonth
             , month = month
             , year = years
             , millisecond = milliseconds
@@ -337,15 +337,18 @@ fromTime ms =
 
       Before ->
         let
+          rem = ms % iday
+
           totalDays = ms // iday
 
-          ( years, remainingDays ) =
-            daysToYears Before 1969 totalDays
+          -- this is right at the start of a new day
+          (years, remainingDays) = if rem == 0 then
+              daysToYears Before 1969 (totalDays + 1)
+            else
+              daysToYears Before 1969 totalDays
 
           ( month, daysInMonth ) =
             daysToMonths years 1 remainingDays
-
-          rem = ms % iday
 
           days =
             rem // iday
