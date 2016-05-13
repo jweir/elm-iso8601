@@ -318,11 +318,11 @@ fromTime ms =
           hours =
             ms // ihour % 24
 
-          ( years, remaningDays ) =
+          ( years, remainingDays ) =
             daysToYears After 1970 days
 
           ( month, daysInMonth ) =
-            daysToMonths years 1 remaningDays
+            daysToMonths years 1 remainingDays
 
         in
           { defaultTime
@@ -339,11 +339,11 @@ fromTime ms =
         let
           totalDays = ms // iday
 
-          ( years, remaningDays ) =
+          ( years, remainingDays ) =
             daysToYears Before 1969 totalDays
 
           ( month, daysInMonth ) =
-            daysToMonths years 1 remaningDays
+            daysToMonths years 1 remainingDays
 
           rem = ms % iday
 
