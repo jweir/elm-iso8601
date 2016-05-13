@@ -215,11 +215,7 @@ fromString s =
                             }
 
             _ ->
-                let
-                    _ =
-                        Debug.log s parts
-                in
-                    Err "unknown error"
+                Err "unknown error"
 
 
 iso8601Regex : String -> List Regex.Match
