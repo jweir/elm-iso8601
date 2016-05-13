@@ -104,6 +104,22 @@ fmt n =
         Basics.toString n
 
 
+fmtYear : Int -> String
+fmtYear n =
+    let
+        s =
+            Basics.toString n
+    in
+        if n < 10 then
+            "000" ++ s
+        else if n < 100 then
+            "00" ++ s
+        else if n < 1000 then
+            "0" ++ s
+        else
+            s
+
+
 fmtMs : Int -> String
 fmtMs n =
     if n == 0 then
@@ -138,7 +154,7 @@ fmtOffset offset =
 toString : Time -> String
 toString time =
     String.join ""
-        [ fmt time.year
+        [ fmtYear time.year
         , "-"
         , fmt time.month
         , "-"
