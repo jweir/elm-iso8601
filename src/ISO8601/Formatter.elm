@@ -3,40 +3,16 @@ module ISO8601.Formatter exposing (toString)
 import String
 import ISO8601.Types exposing(Time, Offset)
 
-fmt : Int -> String
-fmt n =
-    if n < 10 then
-        "0" ++ Basics.toString n
-    else
-        Basics.toString n
-
-
-fmtYear : Int -> String
-fmtYear n =
-    let
-        s =
-            Basics.toString n
-    in
-        if n < 10 then
-            "000" ++ s
-        else if n < 100 then
-            "00" ++ s
-        else if n < 1000 then
-            "0" ++ s
-        else
-            s
-
-
 fmtMs : Int -> String
 fmtMs n =
     if n == 0 then
         ""
-    else if n < 10 then
-        ".00" ++ Basics.toString n
-    else if n < 100 then
-        ".0" ++ Basics.toString n
-    else
-        "." ++ Basics.toString n
+    else 
+      "." ++ (pad0 3 n)
+
+{-| pad left zeros -}
+pad0 : Int -> Int -> String
+pad0 size n = String.padLeft size '0' (Basics.toString n)
 
 fmtOffset : Offset -> String
 fmtOffset offset =
@@ -52,7 +28,7 @@ fmtOffset offset =
                     else
                         "-"
             in
-                symbol ++ (fmt (abs h)) ++ (fmt m)
+                symbol ++ (pad0 2 (abs h)) ++ (pad0 2 m)
 
 
 {-| Converts a Time record to an ISO 8601 formated string.
@@ -60,18 +36,17 @@ fmtOffset offset =
 toString : Time -> String
 toString time =
     String.join ""
-        [ fmtYear time.year
+        [ pad0 4 time.year
         , "-"
-        , fmt time.month
+        , pad0 2 time.month
         , "-"
-        , fmt time.day
+        , pad0 2 time.day
         , "T"
-        , fmt time.hour
+        , pad0 2 time.hour
         , ":"
-        , fmt time.minute
+        , pad0 2 time.minute
         , ":"
-        , fmt time.second
+        , pad0 2 time.second
         , fmtMs time.millisecond
         , fmtOffset time.offset
         ]
-
