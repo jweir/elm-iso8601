@@ -1,24 +1,89 @@
 module ISO8601.Formatter exposing (toString)
 
-import String
-import ISO8601.Types exposing(Time, Offset)
+import String exposing (padLeft)
+import ISO8601.Types exposing (Time, Offset)
 
-fmtMs : Int -> String
-fmtMs n =
-    if n == 0 then
-        ""
-    else 
-      "." ++ (pad0 3 n)
 
-{-| pad left zeros -}
-pad0 : Int -> Int -> String
-pad0 size n = String.padLeft size '0' (Basics.toString n)
+{-| type of formatter component functions
+-}
+type alias Fmt =
+    ( String, Time ) -> ( String, Time )
 
-fmtOffset : Offset -> String
-fmtOffset offset =
-    case offset of
+
+{-| normalize api from formatter components
+-}
+fmt : Fmt -> Time -> String
+fmt f time =
+    let
+        ( str, _ ) =
+            f ( "", time )
+    in
+        str
+
+
+{-| append year to the formatted string
+-}
+year : Fmt
+year ( str, time ) =
+    ( str ++ (Basics.toString time.year), time )
+
+
+{-| append month to the formatted string
+-}
+month : Fmt
+month ( str, time ) =
+    ( str ++ (Basics.toString time.month), time )
+
+
+{-| append day to the formatted string
+-}
+day : Fmt
+day ( str, time ) =
+    ( str ++ (Basics.toString time.day), time )
+
+
+{-| append hour to the formatted string
+-}
+hour : Fmt
+hour ( str, time ) =
+    ( str ++ (Basics.toString time.hour), time )
+
+
+{-| append minute to the formatted string
+-}
+minute : Fmt
+minute ( str, time ) =
+    ( str ++ (Basics.toString time.minute), time )
+
+
+{-| append second to the formatted string
+-}
+second : Fmt
+second ( str, time ) =
+    ( str ++ (Basics.toString time.second), time )
+
+
+{-| append millisecond to the formatted string
+-}
+millisecond : Fmt
+millisecond ( str, time ) =
+    let
+        ms =
+            if time.millisecond == 0 then
+                ""
+            else
+                "." ++ (padLeft 3 '0' (Basics.toString time.millisecond))
+    in
+        ( str ++ ms, time )
+
+
+{-| append offset to the formatted string (eg "Z", "+0200")
+-}
+offset : Fmt
+offset ( str, time ) =
+    case time.offset of
         ( 0, 0 ) ->
-            "Z"
+            ( str ++ "Z", time )
 
         ( h, m ) ->
             let
@@ -27,26 +92,50 @@ fmtOffset offset =
                         "+"
                     else
                         "-"
+
+                pad x =
+                    padLeft 2 '0' (Basics.toString x)
+
+                ofs =
+                    symbol ++ (pad (abs h)) ++ (pad m)
             in
-                symbol ++ (pad0 2 (abs h)) ++ (pad0 2 m)
+                ( str ++ ofs, time )
+
+
+{-| append symbol/string to the formatted string
+-}
+sym : String -> Fmt
+sym s ( str, time ) =
+    ( str ++ s, time )
+
+
+{-| pad formatter component output with zeros
+-}
+pad0 : Int -> Fmt -> Fmt
+pad0 p f ( str, time ) =
+    let
+        ( s, _ ) =
+            f ( "", time )
+    in
+        ( str ++ (padLeft p '0' s), time )
 
 
 {-| Converts a Time record to an ISO 8601 formated string.
 -}
 toString : Time -> String
-toString time =
-    String.join ""
-        [ pad0 4 time.year
-        , "-"
-        , pad0 2 time.month
-        , "-"
-        , pad0 2 time.day
-        , "T"
-        , pad0 2 time.hour
-        , ":"
-        , pad0 2 time.minute
-        , ":"
-        , pad0 2 time.second
-        , fmtMs time.millisecond
-        , fmtOffset time.offset
-        ]
+toString =
+    fmt
+        (pad0 4 year
+            >> sym "-"
+            >> pad0 2 month
+            >> sym "-"
+            >> pad0 2 day
+            >> sym "T"
+            >> pad0 2 hour
+            >> sym ":"
+            >> pad0 2 minute
+            >> sym ":"
+            >> pad0 2 second
+            >> millisecond
+            >> offset
+        )
