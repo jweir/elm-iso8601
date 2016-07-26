@@ -1,4 +1,18 @@
-module ISO8601.Formatter exposing (toString)
+module ISO8601.Formatter
+    exposing
+        ( toString
+        , fmt
+        , year
+        , month
+        , day
+        , hour
+        , minute
+        , second
+        , millisecond
+        , offset
+        , sym
+        , pad0
+        )
 
 import String exposing (padLeft)
 import ISO8601.Types exposing (Time, Offset)
