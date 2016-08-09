@@ -60,11 +60,11 @@ testParsing =
 testDayOfWeek : Test
 testDayOfWeek =
     let
-        assert : String -> DayOfWeek -> Test
+        assert : String -> Weekday -> Test
         assert str day =
             ISO8601.fromString str
                 |> unWrapTime
-                |> ISO8601.dayOfWeek
+                |> ISO8601.weekday
                 |> equals day
     in
         suite "Day of week"

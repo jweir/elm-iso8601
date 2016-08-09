@@ -1,22 +1,37 @@
-module ISO8601 exposing (
-  fromString, toTime, fromTime, toString, dayOfWeek, Time, DayOfWeek(..),
-  year, month, day, hour, minute, second, millisecond, offset
-  )
+module ISO8601
+    exposing
+        ( fromString
+        , toTime
+        , fromTime
+        , toString
+        , Time
+        , Offset
+        , Weekday(..)
+        , year
+        , month
+        , day
+        , hour
+        , minute
+        , second
+        , millisecond
+        , offset
+        , weekday
+        )
 
 {-| This package provides functionality for working with time and strings based
 on the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`
 
 # Time record
-@docs Time, DayOfWeek
+@docs Time, Weekday, Offset
 
 # Accessors
-@docs year, month, day, hour, minute, second, millisecond, offset
+@docs year, month, day, hour, minute, second, millisecond, offset, weekday
 
 # Parsing
 @docs fromString, toString
 
 # Time conversion
-@docs toTime, fromTime, dayOfWeek
+@docs toTime, fromTime
 -}
 
 import Regex exposing (find, regex, split)
@@ -29,6 +44,9 @@ import Array
 -- Model
 
 
+{-| Offset represents the hour and minute timezone offset from UTC.
+
+-}
 type alias Offset =
     ( Int, Int )
 
@@ -66,6 +84,10 @@ iday =
 
 -}
 type alias Time =
+    Model
+
+
+type alias Model =
     { year : Int
     , month : Int
     , day : Int
@@ -92,7 +114,7 @@ defaultTime =
 
 {-| Represents one of the seven days of the week
 -}
-type DayOfWeek
+type Weekday
     = Mon
     | Tue
     | Wed
@@ -440,8 +462,6 @@ fromTime ms =
                     hours =
                         rem // ihour % 24
 
-                    _ =
-                        Debug.log "" ( totalDays, years, rem, remainingDays, days, hours, minutes, seconds )
                 in
                     { defaultTime
                         | second = seconds
@@ -494,39 +514,6 @@ validateTime time =
 
 daysFromEpoch =
     Array.fromList [ Thu, Fri, Sat, Sun, Mon, Tue, Wed ]
-
-
-{-| Returns the day of the week from the Time record
--}
-dayOfWeek : Time -> DayOfWeek
-dayOfWeek time =
-    let
-        t =
-            { defaultTime
-                | year = time.year
-                , month = time.month
-                , day = time.day
-            }
-
-        t' =
-            toTime t
-
-        -- Thursday is the unix epoch
-        days =
-            t' // iday
-
-        _ =
-            Debug.log "wd" ( toString t, t', days, (days % 7) )
-
-        day =
-            Array.get (days % 7) daysFromEpoch
-    in
-        case day of
-            Just d ->
-                d
-
-            Nothing ->
-                Sun
 
 
 {-| return the year
@@ -583,3 +570,34 @@ millisecond time =
 offset : Time -> Offset
 offset time =
     time.offset
+
+{-| Returns the day of the week from the Time record
+-}
+weekday : Time -> Weekday
+weekday time =
+    let
+        t =
+            { defaultTime
+                | year = time.year
+                , month = time.month
+                , day = time.day
+            }
+
+        t' =
+            toTime t
+
+        -- Thursday is the unix epoch
+        days =
+            t' // iday
+
+        day =
+            Array.get (days % 7) daysFromEpoch
+    in
+        case day of
+            Just d ->
+                d
+
+            Nothing ->
+                Sun
+
+
