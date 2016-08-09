@@ -1,10 +1,16 @@
-module ISO8601 exposing (fromString, toTime, fromTime, toString, dayOfWeek, Time, DayOfWeek(..))
+module ISO8601 exposing (
+  fromString, toTime, fromTime, toString, dayOfWeek, Time, DayOfWeek(..),
+  year, month, day, hour, minute, second, millisecond, offset
+  )
 
 {-| This package provides functionality for working with time and strings based
 on the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`
 
 # Time record
 @docs Time, DayOfWeek
+
+# Accessors
+@docs year, month, day, hour, minute, second, millisecond, offset
 
 # Parsing
 @docs fromString, toString
@@ -521,3 +527,59 @@ dayOfWeek time =
 
             Nothing ->
                 Sun
+
+
+{-| return the year
+-}
+year : Time -> Int
+year time =
+    time.year
+
+
+{-| return the month
+-}
+month : Time -> Int
+month time =
+    time.month
+
+
+{-| return the day
+-}
+day : Time -> Int
+day time =
+    time.day
+
+
+{-| return the hour
+-}
+hour : Time -> Int
+hour time =
+    time.hour
+
+
+{-| return the minute
+-}
+minute : Time -> Int
+minute time =
+    time.minute
+
+
+{-| return the secon
+-}
+second : Time -> Int
+second time =
+    time.second
+
+
+{-| return the millisecond
+-}
+millisecond : Time -> Int
+millisecond time =
+    time.millisecond
+
+
+{-| return the offset
+-}
+offset : Time -> Offset
+offset time =
+    time.offset

@@ -2,21 +2,21 @@ module Tests exposing (..)
 
 import ElmTest exposing (..)
 import Html
-import ISO8601 exposing (DayOfWeek(..))
+import ISO8601 exposing (..)
 import ISO8601.Helpers
 import Date
 
 
-assertTime message time year month day hour minute second millisecond offset =
+assertTime message time y m d h min s mil o =
     suite message
-        [ time.year |> equals year
-        , time.month |> equals month
-        , time.day |> equals day
-        , time.hour |> equals hour
-        , time.minute |> equals minute
-        , time.second |> equals second
-        , time.millisecond |> equals millisecond
-        , time.offset |> equals offset
+        [ time |> year |> equals y
+        , time |> month |> equals m
+        , time |> day |> equals d
+        , time |> hour |> equals h
+        , time |> minute |> equals min
+        , time |> second |> equals s
+        , time |> millisecond |> equals mil
+        , time |> offset |> equals o
         ]
 
 
@@ -114,7 +114,7 @@ fromUnixTest : Test
 fromUnixTest =
     let
         assert millseconds =
-            millseconds |> ISO8601.fromTime |> assertTime (toString millseconds)
+            millseconds |> ISO8601.fromTime |> assertTime (Basics.toString millseconds)
     in
         suite "fromTime"
             [ assert 0 1970 1 1 0 0 0 0 ( 0, 0 )
