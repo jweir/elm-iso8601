@@ -94,6 +94,8 @@ daysToYears rel startYear remainingDays =
       in
         if remainingDays' > 0 then
           daysToYears After (startYear + 1) remainingDays'
+        else if remainingDays' == 0 then
+          ( startYear + 1, 0 )
         else
           ( startYear, remainingDays )
     Before ->

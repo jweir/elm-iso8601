@@ -3,7 +3,7 @@ module Tests exposing (..)
 import ElmTest exposing (..)
 import Html
 import ISO8601 exposing (..)
-import ISO8601.Helpers
+import ISO8601.Helpers exposing (..)
 import Date
 
 
@@ -56,6 +56,11 @@ testParsing =
             , assert "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 ( 0, 0 )
             ]
 
+testDaysToYears : Test
+testDaysToYears =
+  suite "daysToYears" [
+    daysToYears After 1970 16801 |> equals (2016,0)
+    ]
 
 testDayOfWeek : Test
 testDayOfWeek =
@@ -105,6 +110,7 @@ testToUnix =
             , assert "1918-11-11T09:00:00-0200" -1613826000000
             , assert "2016-02-04T05:06:07Z" 1454562367000
             , assert "2016-02-04T05:06:07.123Z" 1454562367123
+            , assert "2016-01-01T08:06:07.123Z" 1451635567123
             , assert "1066-12-12T00:01:02Z" -28497657538000
             , assert "0001-12-12T00:01:02Z" -62105788738000
             ]
@@ -126,6 +132,7 @@ fromUnixTest =
             , assert -2000 1969 12 31 23 59 58 0 ( 0, 0 )
             , assert -1456707723000 1923 11 3 22 57 57 0 ( 0, 0 )
             , assert -28497657538000 1066 12 12 0 1 2 0 ( 0, 0 )
+            , assert 1451635200000 2016 01 01 8 0 0 0 (0,0)
             ]
 
 
@@ -271,6 +278,7 @@ all =
         , testErrors
         , testDayOfWeek
         , testRange
+        , testDaysToYears
         ]
 
 
