@@ -347,10 +347,10 @@ toTime time =
         False ->
             let
                 years =
-                    List.map daysInYear [(time.year + 1)..(1970 - 1)]
+                    List.map daysInYear (List.range (time.year + 1) (1970 - 1))
 
                 totalDays =
-                    List.map (daysInMonth time.year) [1..(time.month)]
+                    List.map (daysInMonth time.year) (List.range 1 (time.month))
                         |> List.sum
 
                 tots =
@@ -368,10 +368,10 @@ toTime time =
         True ->
             let
                 years =
-                    List.map daysInYear [1970..(time.year - 1)]
+                    List.map daysInYear (List.range 1970 (time.year - 1))
 
                 months =
-                    List.map (daysInMonth time.year) [1..(time.month - 1)]
+                    List.map (daysInMonth time.year) (List.range 1 (time.month - 1))
 
                 tots =
                     [ (iday * List.sum years)
@@ -461,7 +461,6 @@ fromTime ms =
 
                     hours =
                         rem // ihour % 24
-
                 in
                     { defaultTime
                         | second = seconds
@@ -571,6 +570,7 @@ offset : Time -> Offset
 offset time =
     time.offset
 
+
 {-| Returns the day of the week from the Time record
 -}
 weekday : Time -> Weekday
@@ -583,12 +583,12 @@ weekday time =
                 , day = time.day
             }
 
-        t' =
+        t_ =
             toTime t
 
         -- Thursday is the unix epoch
         days =
-            t' // iday
+            t_ // iday
 
         day =
             Array.get (days % 7) daysFromEpoch
@@ -599,5 +599,3 @@ weekday time =
 
             Nothing ->
                 Sun
-
-
