@@ -1,22 +1,23 @@
 module Tests exposing (..)
 
-import ElmTest exposing (..)
-import Html
+import Test exposing (..)
+import Expect exposing (..)
 import ISO8601 exposing (..)
 import ISO8601.Helpers exposing (..)
+import Test.Runner.Html
 import Date
 
 
 assertTime message time y m d h min s mil o =
-    suite message
-        [ time |> year |> equals y
-        , time |> month |> equals m
-        , time |> day |> equals d
-        , time |> hour |> equals h
-        , time |> minute |> equals min
-        , time |> second |> equals s
-        , time |> millisecond |> equals mil
-        , time |> offset |> equals o
+    describe message
+        [ test "" <| \() -> time |> year |> equal y
+        , test "" <| \() -> time |> month |> equal m
+        , test "" <| \() -> time |> day |> equal d
+        , test "" <| \() -> time |> hour |> equal h
+        , test "" <| \() -> time |> minute |> equal min
+        , test "" <| \() -> time |> second |> equal s
+        , test "" <| \() -> time |> millisecond |> equal mil
+        , test "" <| \() -> time |> offset |> equal o
         ]
 
 
@@ -33,7 +34,7 @@ testParsing =
         assert string =
             string |> ISO8601.fromString |> unWrapTime |> assertTime string
     in
-        suite "Parsing"
+        describe "Parsing"
             [ assert "2006" 2006 1 1 0 0 0 0 ( 0, 0 )
             , assert "2006-11" 2006 11 1 0 0 0 0 ( 0, 0 )
             , assert "2015-03-02" 2015 3 2 0 0 0 0 ( 0, 0 )
@@ -56,23 +57,27 @@ testParsing =
             , assert "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 ( 0, 0 )
             ]
 
+
 testDaysToYears : Test
 testDaysToYears =
-  suite "daysToYears" [
-    daysToYears After 1970 16801 |> equals (2016,0)
-    ]
+    describe "daysToYears"
+        [ test "" <| \() -> daysToYears After 1970 16801 |> equal ( 2016, 0 )
+        ]
+
 
 testDayOfWeek : Test
 testDayOfWeek =
     let
         assert : String -> Weekday -> Test
         assert str day =
-            ISO8601.fromString str
-                |> unWrapTime
-                |> ISO8601.weekday
-                |> equals day
+            test "" <|
+                \() ->
+                    ISO8601.fromString str
+                        |> unWrapTime
+                        |> ISO8601.weekday
+                        |> equal day
     in
-        suite "Day of week"
+        describe "Day of week"
             [ assert "3000-10-01" Wed
             , assert "2099-12-12" Sat
             , assert "2016-04-12" Tue
@@ -93,12 +98,12 @@ testToUnix : Test
 testToUnix =
     let
         assert str seconds =
-            suite str
-                [ ISO8601.fromString str |> unWrapTime |> ISO8601.toTime |> equals seconds
-                , ISO8601.fromString str |> unWrapTime |> ISO8601.toString |> equals str
+            describe str
+                [ test "" <| \() -> ISO8601.fromString str |> unWrapTime |> ISO8601.toTime |> equal seconds
+                , test "" <| \() -> ISO8601.fromString str |> unWrapTime |> ISO8601.toString |> equal str
                 ]
     in
-        suite "toUnix"
+        describe "toUnix"
             [ assert "1970-01-01T00:00:00Z" 0
               -- Unix Epoch in New Dehli
             , assert "1970-01-01T05:30:00+0530" 0
@@ -122,7 +127,7 @@ fromUnixTest =
         assert millseconds =
             millseconds |> ISO8601.fromTime |> assertTime (Basics.toString millseconds)
     in
-        suite "fromTime"
+        describe "fromTime"
             [ assert 0 1970 1 1 0 0 0 0 ( 0, 0 )
             , assert 1 1970 1 1 0 0 0 1 ( 0, 0 )
             , assert 3661123 1970 1 1 1 1 1 123 ( 0, 0 )
@@ -132,7 +137,7 @@ fromUnixTest =
             , assert -2000 1969 12 31 23 59 58 0 ( 0, 0 )
             , assert -1456707723000 1923 11 3 22 57 57 0 ( 0, 0 )
             , assert -28497657538000 1066 12 12 0 1 2 0 ( 0, 0 )
-            , assert 1451635200000 2016 01 01 8 0 0 0 (0,0)
+            , assert 1451635200000 2016 1 1 8 0 0 0 ( 0, 0 )
             ]
 
 
@@ -154,9 +159,9 @@ testJSDate =
                         |> Date.toTime
                         |> round
             in
-                iso `equals` elm
+                test "" <| \() -> equal iso elm
     in
-        suite "Elm.Date Compatibile"
+        describe "Elm.Date Compatibile"
             [ assert "1969-12-31T17:00:00-07:00"
             , assert "2016-12-31T17:00:00-07:00"
             ]
@@ -179,23 +184,27 @@ testLeapYear =
             ]
 
         assertion ( year, value ) =
-            ISO8601.Helpers.isLeapYear (year) |> equals value
+            test "" <|
+                \() ->
+                    ISO8601.Helpers.isLeapYear (year) |> equal value
     in
-        suite "Leap Year" (List.map assertion expectations)
+        describe "Leap Year" (List.map assertion expectations)
 
 
 testErrors =
     let
         test : String -> String -> Test
         test timeStr expected =
-            case ISO8601.fromString timeStr of
-                Err str ->
-                    str |> equals expected
+            Test.test "" <|
+                \() ->
+                    case ISO8601.fromString timeStr of
+                        Err str ->
+                            str |> equal expected
 
-                Ok _ ->
-                    "" |> equals expected
+                        Ok _ ->
+                            "" |> equal expected
     in
-        suite "errors"
+        describe "errors"
             [ test "2014-00-01" "month is out of range"
             , test "2014-12-00" "day is out of range"
             , test "2014-13-01" "month is out of range"
@@ -231,9 +240,9 @@ rangeAssert stop inc current =
                 Err _ ->
                     ( False, current )
 
-                Ok time' ->
+                Ok time_ ->
                     -- when converting back it should equal the starting value
-                    if ISO8601.toTime (time') == current then
+                    if ISO8601.toTime (time_) == current then
                         rangeAssert stop inc (current + inc)
                     else
                         ( False, current )
@@ -262,14 +271,14 @@ testRange =
                 1000
                 (ISO8601.fromString "1960-03-31T23:00:00Z" |> unWrapTime |> ISO8601.toTime)
     in
-        suite "range"
-            [ f |> equals ( True, fstop )
-            , b |> equals ( True, bstop )
+        describe "range"
+            [ test "" <| \() -> f |> equal ( True, fstop )
+            , test "" <| \() -> b |> equal ( True, bstop )
             ]
 
 
 all =
-    suite "ISO8601"
+    describe "ISO8601"
         [ testParsing
         , testToUnix
         , fromUnixTest
@@ -283,6 +292,4 @@ all =
 
 
 main =
-    Html.pre []
-        [ Html.text (stringRunner all)
-        ]
+    all |> Test.Runner.Html.run
