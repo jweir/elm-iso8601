@@ -4,20 +4,19 @@ import Test exposing (..)
 import Expect exposing (..)
 import ISO8601 exposing (..)
 import ISO8601.Helpers exposing (..)
-import Test.Runner.Html
 import Date
 
 
 assertTime message time y m d h min s mil o =
     describe message
-        [ test "" <| \() -> time |> year |> equal y
-        , test "" <| \() -> time |> month |> equal m
-        , test "" <| \() -> time |> day |> equal d
-        , test "" <| \() -> time |> hour |> equal h
-        , test "" <| \() -> time |> minute |> equal min
-        , test "" <| \() -> time |> second |> equal s
-        , test "" <| \() -> time |> millisecond |> equal mil
-        , test "" <| \() -> time |> offset |> equal o
+        [ test "year" <| \() -> time |> year |> equal y
+        , test "month" <| \() -> time |> month |> equal m
+        , test "day" <| \() -> time |> day |> equal d
+        , test "hour" <| \() -> time |> hour |> equal h
+        , test "minute" <| \() -> time |> minute |> equal min
+        , test "second" <| \() -> time |> second |> equal s
+        , test "milisecond" <| \() -> time |> millisecond |> equal mil
+        , test "offset" <| \() -> time |> offset |> equal o
         ]
 
 
@@ -50,7 +49,6 @@ testParsing =
               -- resoltion greater than milliseconds is rounded
             , assert "2015-03-02T15:16:17.0009" 2015 3 2 15 16 17 1 ( 0, 0 )
             , assert "2015-03-02T15:16:17.00049999" 2015 3 2 15 16 17 0 ( 0, 0 )
-            , assert "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 )
             , assert "1066-12-03T10:01:59.022+00:00" 1066 12 3 10 1 59 22 ( 0, 0 )
             , assert "1066-12-03T10:01:59.5+00:00" 1066 12 3 10 1 59 500 ( 0, 0 )
               -- comma instead of period
@@ -60,9 +58,7 @@ testParsing =
 
 testDaysToYears : Test
 testDaysToYears =
-    describe "daysToYears"
-        [ test "" <| \() -> daysToYears After 1970 16801 |> equal ( 2016, 0 )
-        ]
+    test "daysToYears" <| \() -> daysToYears After 1970 16801 |> equal ( 2016, 0 )
 
 
 testDayOfWeek : Test
@@ -70,7 +66,7 @@ testDayOfWeek =
     let
         assert : String -> Weekday -> Test
         assert str day =
-            test "" <|
+            test str <|
                 \() ->
                     ISO8601.fromString str
                         |> unWrapTime
@@ -99,8 +95,8 @@ testToUnix =
     let
         assert str seconds =
             describe str
-                [ test "" <| \() -> ISO8601.fromString str |> unWrapTime |> ISO8601.toTime |> equal seconds
-                , test "" <| \() -> ISO8601.fromString str |> unWrapTime |> ISO8601.toString |> equal str
+                [ test "toTime" <| \() -> ISO8601.fromString str |> unWrapTime |> ISO8601.toTime |> equal seconds
+                , test "toString" <| \() -> ISO8601.fromString str |> unWrapTime |> ISO8601.toString |> equal str
                 ]
     in
         describe "toUnix"
@@ -159,7 +155,7 @@ testJSDate =
                         |> Date.toTime
                         |> round
             in
-                test "" <| \() -> equal iso elm
+                test str <| \() -> equal iso elm
     in
         describe "Elm.Date Compatibile"
             [ assert "1969-12-31T17:00:00-07:00"
@@ -184,7 +180,7 @@ testLeapYear =
             ]
 
         assertion ( year, value ) =
-            test "" <|
+            test (Basics.toString year) <|
                 \() ->
                     ISO8601.Helpers.isLeapYear (year) |> equal value
     in
@@ -195,7 +191,7 @@ testErrors =
     let
         test : String -> String -> Test
         test timeStr expected =
-            Test.test "" <|
+            Test.test timeStr <|
                 \() ->
                     case ISO8601.fromString timeStr of
                         Err str ->
@@ -272,24 +268,6 @@ testRange =
                 (ISO8601.fromString "1960-03-31T23:00:00Z" |> unWrapTime |> ISO8601.toTime)
     in
         describe "range"
-            [ test "" <| \() -> f |> equal ( True, fstop )
-            , test "" <| \() -> b |> equal ( True, bstop )
+            [ test "f" <| \() -> f |> equal ( True, fstop )
+            , test "b" <| \() -> b |> equal ( True, bstop )
             ]
-
-
-all =
-    describe "ISO8601"
-        [ testParsing
-        , testToUnix
-        , fromUnixTest
-        , testLeapYear
-        , testJSDate
-        , testErrors
-        , testDayOfWeek
-        , testRange
-        , testDaysToYears
-        ]
-
-
-main =
-    all |> Test.Runner.Html.run
