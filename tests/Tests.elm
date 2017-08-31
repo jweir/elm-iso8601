@@ -150,10 +150,8 @@ testJSDate =
                 -- round trip from ISO to ELM back to ISO
                 elm =
                     iso
-                        |> toFloat
                         |> Date.fromTime
                         |> Date.toTime
-                        |> round
             in
                 test str <| \() -> equal iso elm
     in
@@ -219,7 +217,7 @@ testErrors =
             ]
 
 
-rangeAssert : Int -> Int -> Int -> ( Bool, Int )
+rangeAssert : Float -> Float -> Float -> ( Bool, Float )
 rangeAssert stop inc current =
     let
         time =

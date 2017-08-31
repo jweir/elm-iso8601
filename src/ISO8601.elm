@@ -341,7 +341,7 @@ offsetToTime time =
 
 {-| Converts the Time to milliseconds relative to the Unix epoch: `1970-01-01T00:00:00Z`
 -}
-toTime : Time -> Int
+toTime : Time -> Float
 toTime time =
     case time.year >= 1970 of
         False ->
@@ -363,7 +363,7 @@ toTime time =
                     , (offsetToTime time)
                     ]
             in
-                0 - (List.sum tots - time.millisecond)
+                0 - (List.sum tots - time.millisecond) |> toFloat
 
         True ->
             let
@@ -383,14 +383,17 @@ toTime time =
                     , (-1 * offsetToTime time)
                     ]
             in
-                (List.sum tots) + time.millisecond
+                (List.sum tots) + time.millisecond |> toFloat
 
 
 {-| Converts the milliseconds relative to the Unix epoch to a Time record.
 -}
-fromTime : Int -> Time
-fromTime ms =
+fromTime : Float -> Time
+fromTime msFloat =
     let
+        ms =
+            msFloat |> round
+
         milliseconds =
             ms % isec
 
@@ -511,10 +514,6 @@ validateTime time =
             validateHour time
 
 
-daysFromEpoch =
-    Array.fromList [ Thu, Fri, Sat, Sun, Mon, Tue, Wed ]
-
-
 {-| return the year
 -}
 year : Time -> Int
@@ -576,26 +575,27 @@ offset time =
 weekday : Time -> Weekday
 weekday time =
     let
-        t =
-            { defaultTime
+        daysFromEpoch =
+            Array.fromList [ Thu, Fri, Sat, Sun, Mon, Tue, Wed ]
+
+        daysSinceEpoch =
+            ({ defaultTime
                 | year = time.year
                 , month = time.month
                 , day = time.day
-            }
-
-        t_ =
-            toTime t
-
-        -- Thursday is the unix epoch
-        days =
-            t_ // iday
+             }
+                |> toTime
+                |> round
+            )
+                // iday
 
         day =
-            Array.get (days % 7) daysFromEpoch
+            Array.get (daysSinceEpoch % 7) daysFromEpoch
     in
         case day of
             Just d ->
                 d
 
+            -- this should never be reached
             Nothing ->
                 Sun
