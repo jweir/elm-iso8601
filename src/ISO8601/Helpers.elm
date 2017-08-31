@@ -1,4 +1,13 @@
-module ISO8601.Helpers exposing (EpochRelative(..), daysToYears, daysToMonths, isLeapYear, daysInYear, daysInMonth, toInt)
+module ISO8601.Helpers
+    exposing
+        ( EpochRelative(..)
+        , daysToYears
+        , daysToMonths
+        , isLeapYear
+        , daysInYear
+        , daysInMonth
+        , toInt
+        )
 
 import Array
 import String
