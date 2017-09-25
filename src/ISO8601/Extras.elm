@@ -1,11 +1,11 @@
-module ISO8601.Helpers
+module ISO8601.Extras
     exposing
         ( EpochRelative(..)
-        , daysToYears
-        , daysToMonths
-        , isLeapYear
-        , daysInYear
         , daysInMonth
+        , daysInYear
+        , daysToMonths
+        , daysToYears
+        , isLeapYear
         , toInt
         )
 
@@ -17,7 +17,7 @@ toInt : String -> Int
 toInt str =
     String.toInt str
         |> Result.toMaybe
-        |> Maybe.withDefault (0)
+        |> Maybe.withDefault 0
 
 
 isLeapYear : Int -> Bool
@@ -35,18 +35,18 @@ isLeapYear year =
         c =
             0 == year % 400
     in
-        case [ a, b, c ] of
-            [ True, True, True ] ->
-                True
+    case [ a, b, c ] of
+        [ True, True, True ] ->
+            True
 
-            [ True, False, _ ] ->
-                True
+        [ True, False, _ ] ->
+            True
 
-            [ True, True, False ] ->
-                False
+        [ True, True, False ] ->
+            False
 
-            _ ->
-                False
+        _ ->
+            False
 
 
 type alias CalMonth =
@@ -77,20 +77,20 @@ daysInMonth year monthInt =
         calMonth =
             Array.get (monthInt - 1) calendar
     in
-        case calMonth of
-            Just ( _, days, leapDays ) ->
-                if isLeapYear (year) then
-                    leapDays
-                else
-                    days
+    case calMonth of
+        Just ( _, days, leapDays ) ->
+            if isLeapYear year then
+                leapDays
+            else
+                days
 
-            Nothing ->
-                0
+        Nothing ->
+            0
 
 
 daysInYear : Int -> Int
 daysInYear year =
-    if isLeapYear (year) then
+    if isLeapYear year then
         366
     else
         365
@@ -113,22 +113,22 @@ daysToYears rel startYear remainingDays =
                 remainingDays_ =
                     remainingDays - daysInYear startYear
             in
-                if remainingDays_ > 0 then
-                    daysToYears After (startYear + 1) remainingDays_
-                else if remainingDays_ == 0 then
-                    ( startYear + 1, 0 )
-                else
-                    ( startYear, remainingDays )
+            if remainingDays_ > 0 then
+                daysToYears After (startYear + 1) remainingDays_
+            else if remainingDays_ == 0 then
+                ( startYear + 1, 0 )
+            else
+                ( startYear, remainingDays )
 
         Before ->
             let
                 remainingDays_ =
                     remainingDays + daysInYear startYear
             in
-                if remainingDays_ < 0 then
-                    daysToYears Before (startYear - 1) remainingDays_
-                else
-                    ( startYear, (daysInYear startYear) + remainingDays )
+            if remainingDays_ < 0 then
+                daysToYears Before (startYear - 1) remainingDays_
+            else
+                ( startYear, daysInYear startYear + remainingDays )
 
 
 
@@ -141,10 +141,10 @@ daysToMonths year startMonth remainingDays =
         remainingDays_ =
             remainingDays - daysInMonth year startMonth
     in
-        if remainingDays_ > 0 then
-            daysToMonths year (startMonth + 1) remainingDays_
-        else
-            ( startMonth, remainingDays )
+    if remainingDays_ > 0 then
+        daysToMonths year (startMonth + 1) remainingDays_
+    else
+        ( startMonth, remainingDays )
 
 
 yearsToDays : Int -> Int -> Int -> Int
