@@ -4,6 +4,8 @@ import Test exposing (Test, test)
 import Expect
 import ISO8601 exposing (..)
 import ISO8601.Math as Math
+import ISO8601.Helpers as Extras
+import Time
 
 
 a : Time
@@ -26,6 +28,11 @@ z =
     ISO8601.fromString "2017-01-02T00:04:05-0600" |> Result.withDefault a
 
 
+yearAgo : Time
+yearAgo =
+    ISO8601.fromString "2016-01-02T00:04:05-0600" |> Result.withDefault a
+
+
 testDiff : Test
 testDiff =
     test "diff" <|
@@ -33,17 +40,25 @@ testDiff =
             Expect.equal -20 (Math.diff a b)
 
 
-testSub : Test
-testSub =
+_ =
+    Debug.log "diff" (Math.diff z yearAgo)
+
+
+testAddAndSub : Test
+testAddAndSub =
     let
         new =
             Math.sub x (1000 * 60 * 60 * 3)
 
         -- 3 hours
     in
-        Test.describe "sub"
+        Test.describe "and and sub"
             [ test "sub with diff" <|
                 \() -> Expect.equal z new
             , test "sub 0" <|
                 \() -> Expect.equal z (Math.sub z 0)
+            , test "sub year" <|
+                \() -> Expect.equal yearAgo (Math.sub z (Time.hour * 24 * (Extras.daysInYear 2016 |> toFloat)))
+            , test "add year" <|
+                \() -> Expect.equal z (Math.add yearAgo (Time.hour * 24 * (Extras.daysInYear 2016 |> toFloat)))
             ]

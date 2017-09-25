@@ -1,3 +1,6 @@
+# Unreleased
+* Use Float for toTime and fromTime to be compatible with core Time.Time
+
 # 3.0.1
 * Fix an infinite loop when handling New Years
 
