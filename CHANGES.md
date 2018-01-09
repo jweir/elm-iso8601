@@ -1,6 +1,8 @@
-# Unreleased
+# 4.0.1
 * Use Float for toTime and fromTime to be compatible with core Time.Time
 * Created diff, sub, and add functions
+
+Note version 4.0.0 was releases but the pacakge had the incorrect version number. Thanks @jesse-c
 
 # 3.0.1
 * Fix an infinite loop when handling New Years
