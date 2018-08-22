@@ -1,9 +1,9 @@
 {
     "type": "package",
     "name": "jweir/elm-iso8601",
-    "summary": "An implementation of the Murmur3 hash function for Elm",
+    "summary": "ISO8601 time parsing.",
     "license": "MIT",
-    "version": "4.0.2",
+    "version": "4.0.3",
     "exposed-modules": [
         "ISO8601"
     ],
