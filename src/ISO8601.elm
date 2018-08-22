@@ -1,25 +1,10 @@
-module ISO8601
-    exposing
-        ( Offset
-        , Time
-        , Weekday(..)
-        , add
-        , day
-        , diff
-        , fromString
-        , fromTime
-        , hour
-        , millisecond
-        , minute
-        , month
-        , offset
-        , second
-        , sub
-        , toString
-        , toTime
-        , weekday
-        , year
-        )
+module ISO8601 exposing
+    ( Time, Weekday(..), Offset
+    , year, month, day, hour, minute, second, millisecond, offset, weekday
+    , fromString, toString
+    , toTime, fromTime
+    , diff, sub, add
+    )
 
 {-| This package provides functionality for working with time and strings based
 on the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`
@@ -57,9 +42,10 @@ offset.
 
 import Array
 import ISO8601.Extras exposing (..)
-import Regex exposing (find, regex, split)
+import Regex exposing (find, replace, split)
 import Result exposing (Result)
 import String
+
 
 
 -- Model
@@ -146,23 +132,27 @@ type Weekday
 fmt : Int -> String
 fmt n =
     if n < 10 then
-        "0" ++ Basics.toString n
+        "0" ++ String.fromInt n
+
     else
-        Basics.toString n
+        String.fromInt n
 
 
 fmtYear : Int -> String
 fmtYear n =
     let
         s =
-            Basics.toString n
+            String.fromInt n
     in
     if n < 10 then
         "000" ++ s
+
     else if n < 100 then
         "00" ++ s
+
     else if n < 1000 then
         "0" ++ s
+
     else
         s
 
@@ -171,17 +161,20 @@ fmtMs : Int -> String
 fmtMs n =
     if n == 0 then
         ""
+
     else if n < 10 then
-        ".00" ++ Basics.toString n
+        ".00" ++ String.fromInt n
+
     else if n < 100 then
-        ".0" ++ Basics.toString n
+        ".0" ++ String.fromInt n
+
     else
-        "." ++ Basics.toString n
+        "." ++ String.fromInt n
 
 
 fmtOffset : Offset -> String
-fmtOffset offset =
-    case offset of
+fmtOffset o =
+    case o of
         ( 0, 0 ) ->
             "Z"
 
@@ -190,6 +183,7 @@ fmtOffset offset =
                 symbol =
                     if h >= 0 then
                         "+"
+
                     else
                         "-"
             in
@@ -241,23 +235,23 @@ fromString s =
             x |> Maybe.withDefault d |> toInt
     in
     case parts of
-        [ [ year, month, day, hour, minute, second, millisecond, offset, invalid ] ] ->
+        [ [ y, mon, d, h, min, sec, mil, off, invalid ] ] ->
             case invalid of
                 Just _ ->
                     Err "unexpected text"
 
                 Nothing ->
                     validateTime
-                        { year = unwrap year "0"
-                        , month = unwrap month "1"
-                        , day = unwrap day "1"
-                        , hour = unwrap hour "0"
-                        , minute = unwrap minute "0"
-                        , second = unwrap second "0"
+                        { year = unwrap y "0"
+                        , month = unwrap mon "1"
+                        , day = unwrap d "1"
+                        , hour = unwrap h "0"
+                        , minute = unwrap min "0"
+                        , second = unwrap sec "0"
                         , -- since the ms will possibly start with 0, add the 1 and get the remainder
                           -- ms' = (toInt ("1" ++ ms)) % 1000
-                          millisecond = parseMilliseconds millisecond
-                        , offset = parseOffset offset
+                          millisecond = parseMilliseconds mil
+                        , offset = parseOffset off
                         }
 
         _ ->
@@ -266,8 +260,8 @@ fromString s =
 
 iso8601Regex : String -> List Regex.Match
 iso8601Regex =
-    Regex.find (Regex.AtMost 1)
-        (Regex.regex
+    Regex.findAtMost 1
+        (Regex.fromString
             ("(\\d{4})?-?"
                 ++ -- year
                    "(\\d{2})?-?"
@@ -289,6 +283,7 @@ iso8601Regex =
                    "(.*)?"
              -- invalid text
             )
+            |> Maybe.withDefault Regex.never
         )
 
 
@@ -301,10 +296,15 @@ parseMilliseconds msString =
         Just s ->
             let
                 decimalStr =
-                    Regex.replace (Regex.AtMost 1) (Regex.regex "[,.]") (\_ -> "0.") s
+                    Regex.replaceAtMost 1
+                        (Regex.fromString "[,.]"
+                            |> Maybe.withDefault Regex.never
+                        )
+                        (\_ -> "0.")
+                        s
 
                 decimal =
-                    String.toFloat decimalStr |> Result.toMaybe |> Maybe.withDefault 0.0
+                    String.toFloat decimalStr |> Maybe.withDefault 0.0
             in
             1000 * decimal |> round
 
@@ -313,36 +313,36 @@ parseOffset : Maybe String -> Offset
 parseOffset timeString =
     let
         re =
-            Regex.regex "(Z|([+-]\\d{2}:?\\d{2}))?"
+            Regex.fromString "(Z|([+-]\\d{2}:?\\d{2}))?" |> Maybe.withDefault Regex.never
 
         -- offset
         -- offset can be Z or ±h:mm ±hhmm or ±hh
         match =
             timeString
                 |> Maybe.withDefault ""
-                |> find (Regex.AtMost 1) (regex "([-+])(\\d\\d):?(\\d\\d)")
+                |> Regex.findAtMost 1 (Regex.fromString "([-+])(\\d\\d):?(\\d\\d)" |> Maybe.withDefault Regex.never)
 
         parts =
             List.map .submatches match
 
-        setHour modifier hour =
+        setHour modifier hour_ =
             case modifier of
                 "+" ->
-                    hour
+                    hour_
 
                 "-" ->
-                    modifier ++ hour
+                    modifier ++ hour_
 
                 -- this should never happen
                 _ ->
-                    hour
+                    hour_
     in
     case parts of
-        [ [ Just modifier, Just hour, Just minute ] ] ->
-            ( toInt (setHour modifier hour), toInt minute )
+        [ [ Just modifier, Just hour_, Just minute_ ] ] ->
+            ( toInt (setHour modifier hour_), toInt minute_ )
 
-        [ [ Just modifier, Just hour ] ] ->
-            ( toInt (setHour modifier hour), 0 )
+        [ [ Just modifier, Just hour_ ] ] ->
+            ( toInt (setHour modifier hour_), 0 )
 
         _ ->
             ( 0, 0 )
@@ -413,11 +413,12 @@ fromTime msFloat =
             msFloat |> round
 
         milliseconds =
-            ms % isec
+            ms |> modBy isec
 
         v =
             if ms >= 0 then
                 After
+
             else
                 Before
     in
@@ -429,18 +430,18 @@ fromTime msFloat =
                     ms // iday
 
                 seconds =
-                    ms // isec % 60
+                    ms // isec |> modBy 60
 
                 minutes =
-                    ms // imin % 60
+                    ms // imin |> modBy 60
 
                 hours =
-                    ms // ihour % 24
+                    ms // ihour |> modBy 24
 
                 ( years, remainingDays ) =
                     daysToYears After 1970 days
 
-                ( month, daysInMonth ) =
+                ( months, daysInMonth ) =
                     daysToMonths years 1 (remainingDays + 1)
             in
             { defaultTime
@@ -448,7 +449,7 @@ fromTime msFloat =
                 , minute = minutes
                 , hour = hours
                 , day = daysInMonth
-                , month = month
+                , month = months
                 , year = years
                 , millisecond = milliseconds
             }
@@ -456,7 +457,7 @@ fromTime msFloat =
         Before ->
             let
                 rem =
-                    ms % iday
+                    ms |> modBy iday
 
                 totalDays =
                     ms // iday
@@ -465,30 +466,31 @@ fromTime msFloat =
                 ( years, remainingDays ) =
                     if rem == 0 then
                         daysToYears Before 1969 (totalDays + 1)
+
                     else
                         daysToYears Before 1969 totalDays
 
-                ( month, daysInMonth ) =
+                ( months, daysInMonth ) =
                     daysToMonths years 1 remainingDays
 
                 days =
                     rem // iday
 
                 seconds =
-                    rem // isec % 60
+                    rem // isec |> modBy 60
 
                 minutes =
-                    rem // imin % 60
+                    rem // imin |> modBy 60
 
                 hours =
-                    rem // ihour % 24
+                    rem // ihour |> modBy 24
             in
             { defaultTime
                 | second = seconds
                 , minute = minutes
                 , hour = hours
                 , day = daysInMonth
-                , month = month
+                , month = months
                 , year = years
                 , millisecond = milliseconds
             }
@@ -508,12 +510,16 @@ validateHour time =
     in
     if h == 24 && (m + s) > 0 then
         Err "hour is out of range"
+
     else if h < 0 || h > 24 then
         Err "hour is out of range"
+
     else if m < 0 || m > 59 then
         Err "minute is out of range"
+
     else if s < 0 || s > 59 then
         Err "second is out of range"
+
     else
         Ok time
 
@@ -526,8 +532,10 @@ validateTime time =
     in
     if time.month < 1 || time.month > 12 then
         Err "month is out of range"
+
     else if time.day < 1 || time.day > daysInMonth time.year time.month then
         Err "day is out of range"
+
     else
         validateHour time
 
@@ -607,10 +615,10 @@ weekday time =
             )
                 // iday
 
-        day =
-            Array.get (daysSinceEpoch % 7) daysFromEpoch
+        days =
+            Array.get (daysSinceEpoch |> modBy 7) daysFromEpoch
     in
-    case day of
+    case days of
         Just d ->
             d
 
@@ -645,18 +653,18 @@ add time amount =
 
 
 offsetToMS : Offset -> Float
-offsetToMS offset =
+offsetToMS offsets =
     let
-        ( hour, minutes ) =
-            offset
+        ( hours, minutes ) =
+            offsets
     in
-    (hour * 60 * 60 * 1000) + (minutes * 60 * 1000) |> toFloat
+    (hours * 60 * 60 * 1000) + (minutes * 60 * 1000) |> toFloat
 
 
 fromTimeWithOffset : Offset -> Float -> Time
-fromTimeWithOffset offset unix =
+fromTimeWithOffset offsets unix =
     let
         new =
-            fromTime (unix + offsetToMS offset)
+            fromTime (unix + offsetToMS offsets)
     in
-    { new | offset = offset }
+    { new | offset = offsets }
