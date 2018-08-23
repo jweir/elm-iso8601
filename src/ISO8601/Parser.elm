@@ -159,6 +159,8 @@ chompOffset =
 
 
 {-| A fixed-length integer padded with zeroes.
+This function copied from <https://github.com/rtfeldman/elm-iso8601-date-strings>
+Copyright (c) 2018, Richard Feldman
 -}
 paddedInt : Int -> Parser Int
 paddedInt quantity =
