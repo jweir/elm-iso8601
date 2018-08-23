@@ -1,10 +1,14 @@
-module Extras exposing (..)
+module Extras exposing (a, b, testAddAndSub, testDiff, x, xx, yearAgo, z)
 
 import Expect
 import ISO8601 exposing (..)
 import ISO8601.Extras as Extras
 import Test exposing (Test, test)
-import Time
+
+
+hour : Float
+hour =
+    1000 * 60 * 60
 
 
 a : Time
@@ -39,7 +43,7 @@ testDiff =
             Expect.equal -20 (diff a b)
 
 
-_ =
+xx =
     Debug.log "diff" (diff z yearAgo)
 
 
@@ -51,13 +55,13 @@ testAddAndSub =
 
         -- 3 hours
     in
-    Test.describe "and and sub"
+    Test.describe "add and sub"
         [ test "sub with diff" <|
             \() -> Expect.equal z new
         , test "sub 0" <|
             \() -> Expect.equal z (sub z 0)
         , test "sub year" <|
-            \() -> Expect.equal yearAgo (sub z (Time.hour * 24 * (Extras.daysInYear 2016 |> toFloat)))
+            \() -> Expect.equal yearAgo (sub z (hour * 24 * (Extras.daysInYear 2016 |> toFloat)))
         , test "add year" <|
-            \() -> Expect.equal z (add yearAgo (Time.hour * 24 * (Extras.daysInYear 2016 |> toFloat)))
+            \() -> Expect.equal z (add yearAgo (hour * 24 * (Extras.daysInYear 2016 |> toFloat)))
         ]

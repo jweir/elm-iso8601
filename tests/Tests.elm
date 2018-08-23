@@ -1,10 +1,10 @@
-module Tests exposing (..)
+module Tests exposing (assertTime, fromUnixTest, rangeAssert, testDayOfWeek, testDaysToYears, testErrors, testLeapYear, testParsing, testRange, testToUnix, unWrapTime)
 
-import Date
 import Expect exposing (..)
 import ISO8601 exposing (..)
 import ISO8601.Extras exposing (..)
 import Test exposing (..)
+import Time
 
 
 assertTime message time y m d h min s mil o =
@@ -23,8 +23,7 @@ assertTime message time y m d h min s mil o =
 unWrapTime : Result String ISO8601.Time -> ISO8601.Time
 unWrapTime time =
     time
-        |> Result.toMaybe
-        |> Maybe.withDefault (ISO8601.fromTime -100000)
+        |> Result.withDefault (ISO8601.fromTime -100000)
 
 
 testParsing : Test
@@ -125,7 +124,7 @@ fromUnixTest : Test
 fromUnixTest =
     let
         assert millseconds =
-            millseconds |> ISO8601.fromTime |> assertTime (Basics.toString millseconds)
+            millseconds |> ISO8601.fromTime |> assertTime (String.fromFloat millseconds)
     in
     describe "fromTime"
         [ assert 0 1970 1 1 0 0 0 0 ( 0, 0 )
@@ -138,30 +137,6 @@ fromUnixTest =
         , assert -1456707723000 1923 11 3 22 57 57 0 ( 0, 0 )
         , assert -28497657538000 1066 12 12 0 1 2 0 ( 0, 0 )
         , assert 1451635200000 2016 1 1 8 0 0 0 ( 0, 0 )
-        ]
-
-
-testJSDate : Test
-testJSDate =
-    let
-        assert str =
-            let
-                iso =
-                    ISO8601.fromString str
-                        |> unWrapTime
-                        |> ISO8601.toTime
-
-                -- round trip from ISO to ELM back to ISO
-                elm =
-                    iso
-                        |> Date.fromTime
-                        |> Date.toTime
-            in
-            test str <| \() -> equal iso elm
-    in
-    describe "Elm.Date Compatibile"
-        [ assert "1969-12-31T17:00:00-07:00"
-        , assert "2016-12-31T17:00:00-07:00"
         ]
 
 
@@ -182,7 +157,7 @@ testLeapYear =
             ]
 
         assertion ( year, value ) =
-            test (Basics.toString year) <|
+            test (String.fromInt year) <|
                 \() ->
                     ISO8601.Extras.isLeapYear year |> equal value
     in
@@ -236,6 +211,7 @@ rangeAssert stop inc current =
     in
     if current >= stop then
         ( current == stop, current )
+
     else
         case str |> ISO8601.fromString of
             -- there is a conversion error
@@ -246,6 +222,7 @@ rangeAssert stop inc current =
                 -- when converting back it should equal the starting value
                 if ISO8601.toTime time_ == current then
                     rangeAssert stop inc (current + inc)
+
                 else
                     ( False, current )
 

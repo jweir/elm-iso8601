@@ -1,13 +1,12 @@
-module ISO8601.Extras
-    exposing
-        ( EpochRelative(..)
-        , daysInMonth
-        , daysInYear
-        , daysToMonths
-        , daysToYears
-        , isLeapYear
-        , toInt
-        )
+module ISO8601.Extras exposing
+    ( EpochRelative(..)
+    , daysInMonth
+    , daysInYear
+    , daysToMonths
+    , daysToYears
+    , isLeapYear
+    , toInt
+    )
 
 import Array
 import String
@@ -16,7 +15,6 @@ import String
 toInt : String -> Int
 toInt str =
     String.toInt str
-        |> Result.toMaybe
         |> Maybe.withDefault 0
 
 
@@ -25,15 +23,15 @@ isLeapYear year =
     let
         -- A If the year is evenly divisible by 4, go to step B
         a =
-            0 == year % 4
+            0 == (year |> modBy 4)
 
         -- B If the year is evenly divisible by 100, go to step C
         b =
-            0 == year % 100
+            0 == (year |> modBy 100)
 
         -- C If the year is evenly divisible by 400, go to step D
         c =
-            0 == year % 400
+            0 == (year |> modBy 400)
     in
     case [ a, b, c ] of
         [ True, True, True ] ->
@@ -81,6 +79,7 @@ daysInMonth year monthInt =
         Just ( _, days, leapDays ) ->
             if isLeapYear year then
                 leapDays
+
             else
                 days
 
@@ -92,6 +91,7 @@ daysInYear : Int -> Int
 daysInYear year =
     if isLeapYear year then
         366
+
     else
         365
 
@@ -115,8 +115,10 @@ daysToYears rel startYear remainingDays =
             in
             if remainingDays_ > 0 then
                 daysToYears After (startYear + 1) remainingDays_
+
             else if remainingDays_ == 0 then
                 ( startYear + 1, 0 )
+
             else
                 ( startYear, remainingDays )
 
@@ -127,6 +129,7 @@ daysToYears rel startYear remainingDays =
             in
             if remainingDays_ < 0 then
                 daysToYears Before (startYear - 1) remainingDays_
+
             else
                 ( startYear, daysInYear startYear + remainingDays )
 
@@ -143,6 +146,7 @@ daysToMonths year startMonth remainingDays =
     in
     if remainingDays_ > 0 then
         daysToMonths year (startMonth + 1) remainingDays_
+
     else
         ( startMonth, remainingDays )
 
@@ -154,5 +158,6 @@ yearsToDays ending current days =
             ending
             (current + 1)
             (daysInYear current)
+
     else
         days
