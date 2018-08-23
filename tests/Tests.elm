@@ -46,7 +46,7 @@ testParsing =
         , assert "2006-01-02T15:04:05-1200" 2006 1 2 15 4 5 0 ( -12, 0 )
         , assert "1066-12-03T10:01:59+00:00" 1066 12 3 10 1 59 0 ( 0, 0 )
 
-        -- resoltion greater than milliseconds is rounded
+        -- resolution greater than milliseconds is rounded
         , assert "2015-03-02T15:16:17.0009" 2015 3 2 15 16 17 1 ( 0, 0 )
         , assert "2015-03-02T15:16:17.00049999" 2015 3 2 15 16 17 0 ( 0, 0 )
         , assert "1066-12-03T10:01:59.022+00:00" 1066 12 3 10 1 59 22 ( 0, 0 )

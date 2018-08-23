@@ -42,6 +42,7 @@ offset.
 
 import Array
 import ISO8601.Extras exposing (..)
+import ISO8601.Parser as Parser
 import Regex exposing (find, replace, split)
 import Result exposing (Result)
 import String
@@ -224,128 +225,25 @@ toString time =
 -}
 fromString : String -> Result String Time
 fromString s =
-    -- validate the string
-    -- validate the numbers
-    let
-        parts =
-            List.map .submatches (iso8601Regex s)
-
-        unwrap : Maybe String -> String -> Int
-        unwrap x d =
-            x |> Maybe.withDefault d |> toInt
-    in
-    case parts of
-        [ [ y, mon, d, h, min, sec, mil, off, invalid ] ] ->
-            case invalid of
-                Just _ ->
-                    Err "unexpected text"
-
-                Nothing ->
-                    validateTime
-                        { year = unwrap y "0"
-                        , month = unwrap mon "1"
-                        , day = unwrap d "1"
-                        , hour = unwrap h "0"
-                        , minute = unwrap min "0"
-                        , second = unwrap sec "0"
-                        , -- since the ms will possibly start with 0, add the 1 and get the remainder
-                          -- ms' = (toInt ("1" ++ ms)) % 1000
-                          millisecond = parseMilliseconds mil
-                        , offset = parseOffset off
-                        }
-
-        _ ->
-            Err "unknown error"
-
-
-iso8601Regex : String -> List Regex.Match
-iso8601Regex =
-    Regex.findAtMost 1
-        (Regex.fromString
-            ("(\\d{4})?-?"
-                ++ -- year
-                   "(\\d{2})?-?"
-                ++ -- month
-                   "(\\d{2})?"
-                ++ -- DAY
-                   "T?"
-                ++ -- Time indicator
-                   "(\\d{2})?:?"
-                ++ -- hour
-                   "(\\d{2})?:?"
-                ++ -- minute
-                   "(\\d{2})?"
-                ++ -- second
-                   "([.,]\\d{1,})?"
-                ++ -- fractional second
-                   "(Z|[+-]\\d{2}:?\\d{2})?"
-                ++ -- offset
-                   "(.*)?"
-             -- invalid text
-            )
-            |> Maybe.withDefault Regex.never
-        )
-
-
-parseMilliseconds : Maybe String -> Int
-parseMilliseconds msString =
-    case msString of
-        Nothing ->
-            0
-
-        Just s ->
+    case Parser.run s of
+        Ok t ->
             let
-                decimalStr =
-                    Regex.replaceAtMost 1
-                        (Regex.fromString "[,.]"
-                            |> Maybe.withDefault Regex.never
-                        )
-                        (\_ -> "0.")
-                        s
-
-                decimal =
-                    String.toFloat decimalStr |> Maybe.withDefault 0.0
+                seconds =
+                    t.second |> floor
             in
-            1000 * decimal |> round
+            validateTime
+                { year = t.year
+                , month = t.month
+                , day = t.day
+                , hour = t.hour
+                , minute = t.minute
+                , second = seconds
+                , millisecond = 1000 * (t.second - toFloat seconds) |> round
+                , offset = t.offset
+                }
 
-
-parseOffset : Maybe String -> Offset
-parseOffset timeString =
-    let
-        re =
-            Regex.fromString "(Z|([+-]\\d{2}:?\\d{2}))?" |> Maybe.withDefault Regex.never
-
-        -- offset
-        -- offset can be Z or ±h:mm ±hhmm or ±hh
-        match =
-            timeString
-                |> Maybe.withDefault ""
-                |> Regex.findAtMost 1 (Regex.fromString "([-+])(\\d\\d):?(\\d\\d)" |> Maybe.withDefault Regex.never)
-
-        parts =
-            List.map .submatches match
-
-        setHour modifier hour_ =
-            case modifier of
-                "+" ->
-                    hour_
-
-                "-" ->
-                    modifier ++ hour_
-
-                -- this should never happen
-                _ ->
-                    hour_
-    in
-    case parts of
-        [ [ Just modifier, Just hour_, Just minute_ ] ] ->
-            ( toInt (setHour modifier hour_), toInt minute_ )
-
-        [ [ Just modifier, Just hour_ ] ] ->
-            ( toInt (setHour modifier hour_), 0 )
-
-        _ ->
-            ( 0, 0 )
+        Err r ->
+            Err "unexpected text"
 
 
 offsetToTime : Time -> Int
