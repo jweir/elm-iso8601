@@ -2,7 +2,7 @@ module ISO8601 exposing
     ( Time, Weekday(..), Offset
     , year, month, day, hour, minute, second, millisecond, offset, weekday
     , fromString, toString
-    , toTime, fromTime
+    , toTime, fromTime, toPosix, fromPosix
     , diff, sub, add
     )
 
@@ -27,7 +27,7 @@ on the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`
 
 # Time conversion
 
-@docs toTime, fromTime
+@docs toTime, fromTime, toPosix, fromPosix
 
 
 # Manipulation
@@ -45,6 +45,7 @@ import ISO8601.Extras exposing (..)
 import Regex exposing (find, replace, split)
 import Result exposing (Result)
 import String
+import Time exposing (Posix(..))
 
 
 
@@ -355,6 +356,19 @@ offsetToTime time =
             time.offset
     in
     (ihour * m) + (imin * s)
+
+
+toPosix : Time -> Posix
+toPosix time =
+    toTime time |> round |> Time.millisToPosix
+
+
+fromPosix : Posix -> Time
+fromPosix posix =
+    posix
+        |> Time.posixToMillis
+        |> toFloat
+        |> fromTime
 
 
 {-| Converts the Time to milliseconds relative to the Unix epoch: `1970-01-01T00:00:00Z`
