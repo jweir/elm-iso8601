@@ -6,7 +6,7 @@ import ISO8601.Extras as Extras
 import Test exposing (Test, test)
 
 
-hour : Float
+hour : Int
 hour =
     1000 * 60 * 60
 
@@ -61,7 +61,7 @@ testAddAndSub =
         , test "sub 0" <|
             \() -> Expect.equal z (sub z 0)
         , test "sub year" <|
-            \() -> Expect.equal yearAgo (sub z (hour * 24 * (Extras.daysInYear 2016 |> toFloat)))
+            \() -> Expect.equal yearAgo (sub z (hour * 24 * Extras.daysInYear 2016))
         , test "add year" <|
-            \() -> Expect.equal z (add yearAgo (hour * 24 * (Extras.daysInYear 2016 |> toFloat)))
+            \() -> Expect.equal z (add yearAgo (hour * 24 * Extras.daysInYear 2016))
         ]
