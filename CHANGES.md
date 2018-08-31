@@ -1,3 +1,8 @@
+# 5.0.0
+Back to Int. Since the `elm/time` `Posix` is integer based.
+
+* Adds toPosix and fromPosix to be compatible with `elm/time`
+
 # 4.0.1
 * Use Float for toTime and fromTime to be compatible with core Time.Time
 * Created diff, sub, and add functions
