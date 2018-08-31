@@ -124,7 +124,7 @@ fromUnixTest : Test
 fromUnixTest =
     let
         assert millseconds =
-            millseconds |> ISO8601.fromTime |> assertTime (String.fromFloat millseconds)
+            millseconds |> ISO8601.fromTime |> assertTime (String.fromInt millseconds)
     in
     describe "fromTime"
         [ assert 0 1970 1 1 0 0 0 0 ( 0, 0 )
@@ -200,7 +200,7 @@ testErrors =
         ]
 
 
-rangeAssert : Float -> Float -> Float -> ( Bool, Float )
+rangeAssert : Int -> Int -> Int -> ( Bool, Int )
 rangeAssert stop inc current =
     let
         time =

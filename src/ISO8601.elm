@@ -358,22 +358,25 @@ offsetToTime time =
     (ihour * m) + (imin * s)
 
 
+{-| Converts the Time to standard Time.Posix type
+-}
 toPosix : Time -> Posix
 toPosix time =
-    toTime time |> round |> Time.millisToPosix
+    toTime time |> Time.millisToPosix
 
 
+{-| Converts the Time.Posix type to an ISO8601.Time
+-}
 fromPosix : Posix -> Time
 fromPosix posix =
     posix
         |> Time.posixToMillis
-        |> toFloat
         |> fromTime
 
 
 {-| Converts the Time to milliseconds relative to the Unix epoch: `1970-01-01T00:00:00Z`
 -}
-toTime : Time -> Float
+toTime : Time -> Int
 toTime time =
     case time.year >= 1970 of
         False ->
@@ -395,7 +398,7 @@ toTime time =
                     , offsetToTime time
                     ]
             in
-            0 - (List.sum tots - time.millisecond) |> toFloat
+            0 - (List.sum tots - time.millisecond)
 
         True ->
             let
@@ -415,16 +418,16 @@ toTime time =
                     , -1 * offsetToTime time
                     ]
             in
-            List.sum tots + time.millisecond |> toFloat
+            List.sum tots + time.millisecond
 
 
 {-| Converts the milliseconds relative to the Unix epoch to a Time record.
 -}
-fromTime : Float -> Time
+fromTime : Int -> Time
 fromTime msFloat =
     let
         ms =
-            msFloat |> round
+            msFloat
 
         milliseconds =
             ms |> modBy isec
@@ -625,7 +628,6 @@ weekday time =
                 , day = time.day
              }
                 |> toTime
-                |> round
             )
                 // iday
 
@@ -647,35 +649,35 @@ weekday time =
 
 {-| the difference bewteen two Time records in milliseconds
 -}
-diff : Time -> Time -> Float
+diff : Time -> Time -> Int
 diff a b =
     toTime a - toTime b
 
 
 {-| Subtract milliseconds from a Time records
 -}
-sub : Time -> Float -> Time
+sub : Time -> Int -> Time
 sub time amount =
     toTime time - amount |> fromTimeWithOffset time.offset
 
 
 {-| Add milliseconds to a Time records
 -}
-add : Time -> Float -> Time
+add : Time -> Int -> Time
 add time amount =
     toTime time + amount |> fromTimeWithOffset time.offset
 
 
-offsetToMS : Offset -> Float
+offsetToMS : Offset -> Int
 offsetToMS offsets =
     let
         ( hours, minutes ) =
             offsets
     in
-    (hours * 60 * 60 * 1000) + (minutes * 60 * 1000) |> toFloat
+    (hours * 60 * 60 * 1000) + (minutes * 60 * 1000)
 
 
-fromTimeWithOffset : Offset -> Float -> Time
+fromTimeWithOffset : Offset -> Int -> Time
 fromTimeWithOffset offsets unix =
     let
         new =
