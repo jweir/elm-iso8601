@@ -1,3 +1,8 @@
+# 5.0.1
+Create an error when a string is empty - thanks @girishso
+Changed error message from "unknown error" to "Unable to parse time"
+
+
 # 5.0.0
 Back to Int. Since the `elm/time` `Posix` is integer based.
 

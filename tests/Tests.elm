@@ -196,7 +196,8 @@ testErrors =
 
         -- this is not
         , test "2014-12-01 is a cow" "unexpected text"
-        , test "words" "unexpected text"
+        , test "words" "Unable to parse time"
+        , Test.test "empty string" <| \() -> equal (Err "Unable to parse time") (ISO8601.fromString "")
         ]
 
 

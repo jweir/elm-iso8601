@@ -256,14 +256,14 @@ fromString s =
                         }
 
         _ ->
-            Err "unknown error"
+            Err "Unable to parse time"
 
 
 iso8601Regex : String -> List Regex.Match
 iso8601Regex =
     Regex.findAtMost 1
         (Regex.fromString
-            ("(\\d{4})?-?"
+            ("(\\d{4})-?"
                 ++ -- year
                    "(\\d{2})?-?"
                 ++ -- month
