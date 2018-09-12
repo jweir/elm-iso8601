@@ -1,25 +1,10 @@
-module ISO8601
-    exposing
-        ( Offset
-        , Time
-        , Weekday(..)
-        , add
-        , day
-        , diff
-        , fromString
-        , fromTime
-        , hour
-        , millisecond
-        , minute
-        , month
-        , offset
-        , second
-        , sub
-        , toString
-        , toTime
-        , weekday
-        , year
-        )
+module ISO8601 exposing
+    ( Time, Weekday(..), Offset
+    , year, month, day, hour, minute, second, millisecond, offset, weekday
+    , fromString, toString
+    , toTime, fromTime
+    , diff, sub, add
+    )
 
 {-| This package provides functionality for working with time and strings based
 on the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`
@@ -60,6 +45,7 @@ import ISO8601.Extras exposing (..)
 import Regex exposing (find, regex, split)
 import Result exposing (Result)
 import String
+
 
 
 -- Model
@@ -147,6 +133,7 @@ fmt : Int -> String
 fmt n =
     if n < 10 then
         "0" ++ Basics.toString n
+
     else
         Basics.toString n
 
@@ -159,10 +146,13 @@ fmtYear n =
     in
     if n < 10 then
         "000" ++ s
+
     else if n < 100 then
         "00" ++ s
+
     else if n < 1000 then
         "0" ++ s
+
     else
         s
 
@@ -171,10 +161,13 @@ fmtMs : Int -> String
 fmtMs n =
     if n == 0 then
         ""
+
     else if n < 10 then
         ".00" ++ Basics.toString n
+
     else if n < 100 then
         ".0" ++ Basics.toString n
+
     else
         "." ++ Basics.toString n
 
@@ -190,6 +183,7 @@ fmtOffset offset =
                 symbol =
                     if h >= 0 then
                         "+"
+
                     else
                         "-"
             in
@@ -261,14 +255,14 @@ fromString s =
                         }
 
         _ ->
-            Err "unknown error"
+            Err "Unable to parse time"
 
 
 iso8601Regex : String -> List Regex.Match
 iso8601Regex =
     Regex.find (Regex.AtMost 1)
         (Regex.regex
-            ("(\\d{4})?-?"
+            ("(\\d{4})-?"
                 ++ -- year
                    "(\\d{2})?-?"
                 ++ -- month
@@ -418,6 +412,7 @@ fromTime msFloat =
         v =
             if ms >= 0 then
                 After
+
             else
                 Before
     in
@@ -465,6 +460,7 @@ fromTime msFloat =
                 ( years, remainingDays ) =
                     if rem == 0 then
                         daysToYears Before 1969 (totalDays + 1)
+
                     else
                         daysToYears Before 1969 totalDays
 
@@ -508,12 +504,16 @@ validateHour time =
     in
     if h == 24 && (m + s) > 0 then
         Err "hour is out of range"
+
     else if h < 0 || h > 24 then
         Err "hour is out of range"
+
     else if m < 0 || m > 59 then
         Err "minute is out of range"
+
     else if s < 0 || s > 59 then
         Err "second is out of range"
+
     else
         Ok time
 
@@ -526,8 +526,10 @@ validateTime time =
     in
     if time.month < 1 || time.month > 12 then
         Err "month is out of range"
+
     else if time.day < 1 || time.day > daysInMonth time.year time.month then
         Err "day is out of range"
+
     else
         validateHour time
 

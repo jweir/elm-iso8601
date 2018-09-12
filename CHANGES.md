@@ -1,3 +1,10 @@
+# 4.0.4 (0.18)
+
+Create an error when a string is empty - thanks @girishso 
+Changed error message from "unknown error" to "Unable to parse time"
+
+Note: this is a backport from the 5.0.1 version for Elm 0.19
+
 # 4.0.1
 * Use Float for toTime and fromTime to be compatible with core Time.Time
 * Created diff, sub, and add functions
