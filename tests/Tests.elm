@@ -1,4 +1,4 @@
-module Tests exposing (..)
+module Tests exposing (assertTime, fromUnixTest, rangeAssert, testDayOfWeek, testDaysToYears, testErrors, testJSDate, testLeapYear, testParsing, testRange, testToUnix, unWrapTime)
 
 import Date
 import Expect exposing (..)
@@ -221,7 +221,8 @@ testErrors =
 
         -- this is not
         , test "2014-12-01 is a cow" "unexpected text"
-        , test "words" "unexpected text"
+        , test "words" "Unable to parse time"
+        , Test.test "empty string" <| \() -> equal (Err "Unable to parse time") (ISO8601.fromString "")
         ]
 
 
@@ -236,6 +237,7 @@ rangeAssert stop inc current =
     in
     if current >= stop then
         ( current == stop, current )
+
     else
         case str |> ISO8601.fromString of
             -- there is a conversion error
@@ -246,6 +248,7 @@ rangeAssert stop inc current =
                 -- when converting back it should equal the starting value
                 if ISO8601.toTime time_ == current then
                     rangeAssert stop inc (current + inc)
+
                 else
                     ( False, current )
 
