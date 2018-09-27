@@ -1,3 +1,6 @@
+# 5.0.2
+Fix large ints.  The seconds value was not getting correctly handled.
+
 # 5.0.1
 Create an error when a string is empty - thanks @girishso
 Changed error message from "unknown error" to "Unable to parse time"
