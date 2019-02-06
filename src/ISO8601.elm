@@ -4,6 +4,7 @@ module ISO8601 exposing
     , fromString, toString
     , toTime, fromTime, toPosix, fromPosix
     , diff, sub, add
+    , decode
     )
 
 {-| This package provides functionality for working with time and strings based
@@ -38,10 +39,16 @@ offset.
 
 @docs diff, sub, add
 
+
+# Decoding
+
+@docs decode
+
 -}
 
 import Array
 import ISO8601.Extras exposing (..)
+import Json.Decode as Decode
 import Regex exposing (find, replace, split)
 import Result exposing (Result)
 import String
@@ -674,3 +681,23 @@ fromTimeWithOffset offsets unix =
             fromTime (unix + offsetToMS offsets)
     in
     { new | offset = offsets }
+
+
+
+-- Decoding
+
+
+{-| Decode an ISO8601 string from JSON
+-}
+decode : Decode.Decoder Time
+decode =
+    Decode.string
+        |> Decode.andThen
+            (\v ->
+                case fromString v of
+                    Err err ->
+                        Decode.fail err
+
+                    Ok t ->
+                        Decode.succeed t
+            )
