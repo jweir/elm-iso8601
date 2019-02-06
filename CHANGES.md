@@ -1,3 +1,7 @@
+# 6.0.0
+Add a JSON decoder
+Use the Time.Weekday type
+
 # 5.0.2
 Fix large ints.  The seconds value was not getting correctly handled.
 
