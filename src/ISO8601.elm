@@ -1,5 +1,5 @@
 module ISO8601 exposing
-    ( Time, Weekday(..), Offset
+    ( Time, Offset
     , year, month, day, hour, minute, second, millisecond, offset, weekday
     , fromString, toString
     , toTime, fromTime, toPosix, fromPosix
@@ -12,7 +12,7 @@ on the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`
 
 # Time record
 
-@docs Time, Weekday, Offset
+@docs Time, Offset
 
 
 # Accessors
@@ -45,7 +45,7 @@ import ISO8601.Extras exposing (..)
 import Regex exposing (find, replace, split)
 import Result exposing (Result)
 import String
-import Time exposing (Posix(..))
+import Time exposing (Posix(..), Weekday(..))
 
 
 
@@ -116,18 +116,6 @@ defaultTime =
     , millisecond = 0
     , offset = ( 0, 0 )
     }
-
-
-{-| Represents one of the seven days of the week
--}
-type Weekday
-    = Mon
-    | Tue
-    | Wed
-    | Thu
-    | Fri
-    | Sat
-    | Sun
 
 
 fmt : Int -> String
@@ -617,7 +605,7 @@ offset time =
 
 {-| Returns the day of the week from the Time record
 -}
-weekday : Time -> Weekday
+weekday : Time -> Time.Weekday
 weekday time =
     let
         daysFromEpoch =
@@ -649,7 +637,7 @@ weekday time =
 -- Manipulation
 
 
-{-| the difference bewteen two Time records in milliseconds
+{-| the difference between two Time records in milliseconds
 -}
 diff : Time -> Time -> Int
 diff a b =

@@ -4,7 +4,7 @@ import Expect exposing (..)
 import ISO8601 exposing (..)
 import ISO8601.Extras exposing (..)
 import Test exposing (..)
-import Time
+import Time exposing (Weekday(..))
 
 
 assertTime message time y m d h min s mil o =
