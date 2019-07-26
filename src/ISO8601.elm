@@ -449,7 +449,7 @@ fromTime msFloat =
                 -- the int might be too large here to safely calculate in javascript
                 -- so reduce the size first
                 seconds =
-                    (ms |> toFloat) / (isec |> toFloat) |> round |> modBy 60
+                    (ms |> toFloat) / (isec |> toFloat) |> floor |> modBy 60
 
                 minutes =
                     ms // imin |> modBy 60
