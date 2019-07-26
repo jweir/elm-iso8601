@@ -1,3 +1,6 @@
+# 6.0.1
+fix fromTime incorrecly rounding milliseconds up to a second - @tom2
+
 # 6.0.0
 Add a JSON decoder
 Use the Time.Weekday type
