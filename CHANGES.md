@@ -1,3 +1,8 @@
+# 7.0.0
+Breaking change - offset changed from a tuple of (hour, minute) to an Int of minutes.
+This fixes a bug found by @jinjor for when an offset is less than one hour and
+negative. Is there such an offset? Not that we can find.
+
 # 6.0.1
 fix fromTime incorrecly rounding milliseconds up to a second - @tom2
 

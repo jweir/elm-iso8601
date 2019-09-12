@@ -62,7 +62,7 @@ import Time exposing (Posix(..), Weekday(..))
 {-| Offset represents the hour and minute timezone offset from UTC.
 -}
 type alias Offset =
-    ( Int, Int )
+    Int
 
 
 
@@ -108,7 +108,9 @@ type alias Model =
     , minute : Int
     , second : Int
     , millisecond : Int
-    , offset : ( Int, Int )
+
+    -- in minutes
+    , offset : Int
     }
 
 
@@ -121,7 +123,7 @@ defaultTime =
     , minute = 0
     , second = 0
     , millisecond = 0
-    , offset = ( 0, 0 )
+    , offset = 0
     }
 
 
@@ -169,21 +171,26 @@ fmtMs n =
 
 
 fmtOffset : Offset -> String
-fmtOffset o =
-    case o of
-        ( 0, 0 ) ->
-            "Z"
+fmtOffset minutes =
+    if minutes == 0 then
+        "Z"
 
-        ( h, m ) ->
-            let
-                symbol =
-                    if h >= 0 then
-                        "+"
+    else
+        let
+            h =
+                minutes // 60
 
-                    else
-                        "-"
-            in
-            symbol ++ fmt (abs h) ++ fmt m
+            m =
+                modBy 60 minutes
+
+            symbol =
+                if minutes >= 0 then
+                    "+"
+
+                else
+                    "-"
+        in
+        symbol ++ fmt (abs h) ++ fmt m
 
 
 {-| Converts a Time record to an ISO 8601 formated string.
@@ -210,10 +217,10 @@ toString time =
 {-| Given an ISO 8601 compatible string, returns a Time record.
 
     ISO8601.fromString "2016-01-01T01:30:00-04:00"
-    -- { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = (-4,0) }
+    -- { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = -240) }
         : ISO8601.Time
     ISO8601.fromString "2016-11-07"
-    --{ year = 2016, month = 11, day = 7, hour = 0, minute = 0, second = 0, millisecond = 0, offset = (0,0) }
+    --{ year = 2016, month = 11, day = 7, hour = 0, minute = 0, second = 0, millisecond = 0, offset = 0 }
         : ISO8601.Time
     ```
 
@@ -321,36 +328,32 @@ parseOffset timeString =
         parts =
             List.map .submatches match
 
-        setHour modifier hour_ =
+        calc modifier minutes =
             case modifier of
                 "+" ->
-                    hour_
+                    minutes
 
                 "-" ->
-                    modifier ++ hour_
+                    -1 * minutes
 
                 -- this should never happen
                 _ ->
-                    hour_
+                    minutes
     in
     case parts of
         [ [ Just modifier, Just hour_, Just minute_ ] ] ->
-            ( toInt (setHour modifier hour_), toInt minute_ )
+            calc modifier (toInt hour_ * 60 + toInt minute_)
 
         [ [ Just modifier, Just hour_ ] ] ->
-            ( toInt (setHour modifier hour_), 0 )
+            calc modifier (toInt hour_ * 60)
 
         _ ->
-            ( 0, 0 )
+            0
 
 
 offsetToTime : Time -> Int
 offsetToTime time =
-    let
-        ( m, s ) =
-            time.offset
-    in
-    (ihour * m) + (imin * s)
+    time.offset * imin
 
 
 {-| Converts the Time to standard Time.Posix type
@@ -667,11 +670,7 @@ add time amount =
 
 offsetToMS : Offset -> Int
 offsetToMS offsets =
-    let
-        ( hours, minutes ) =
-            offsets
-    in
-    (hours * 60 * 60 * 1000) + (minutes * 60 * 1000)
+    offsets * 60 * 1000
 
 
 fromTimeWithOffset : Offset -> Int -> Time

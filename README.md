@@ -17,7 +17,7 @@ on the ISO 8601 standard i.e. `2016-03-31T12:13:14.22-04:00`
 import ISO8601
 
 t = ISO8601.fromString "2016-01-01T01:30:00-04:00"
--- Ok { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = (-4,0) }
+-- Ok { year = 2016, month = 1, day = 1, hour = 1, minute = 30, second = 0, millisecond = 0, offset = -240) }
     : Result.Result String ISO8601.Time
 
 ````
