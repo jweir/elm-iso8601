@@ -1,3 +1,10 @@
+# 8.0.0
+
+## Breaking Change
+The library now strict about parsing times.  Before it was liberal in accepting strings with dates or times in them.
+Now only a valid ISO8601 date/time string will be parsed.
+
+
 # 7.0.0
 Breaking change - offset changed from a tuple of (hour, minute) to an Int of minutes.
 This fixes a bug found by @jinjor for when an offset is less than one hour and

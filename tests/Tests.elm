@@ -31,6 +31,17 @@ testParsing =
     let
         assert string =
             string |> ISO8601.fromString |> unWrapTime |> assertTime string
+
+        assertError string =
+            test string
+                (\() ->
+                    case ISO8601.fromString string of
+                        Err _ ->
+                            Expect.pass
+
+                        Ok _ ->
+                            Expect.fail string
+                )
     in
     describe "Parsing"
         [ assert "2006" 2006 1 1 0 0 0 0 0
@@ -54,9 +65,9 @@ testParsing =
 
         -- comma instead of period
         , assert "1066-12-03T10:01:59,123+00:00" 1066 12 3 10 1 59 123 0
-
-        -- negative minute only offset
-        , assert "2019-09-12T12:00-00:30" 2019 9 12 12 0 0 0 -30
+        , assertError "can not have strings 1066-12-03T10:01:59,123+00:00 around it"
+        , assertError "or just before it 1066-12-03T10:01:59,123+00:00"
+        , assertError "1066-12-03T10:01:59,123+00:00 or after it"
         ]
 
 

@@ -265,26 +265,28 @@ iso8601Regex : String -> List Regex.Match
 iso8601Regex =
     Regex.findAtMost 1
         (Regex.fromString
-            ("(\\d{4})-?"
+            -- starting
+            ("^"
                 ++ -- year
-                   "(\\d{2})?-?"
+                   "(\\d{4})-?"
                 ++ -- month
+                   "(\\d{2})?-?"
+                ++ -- day
                    "(\\d{2})?"
-                ++ -- DAY
-                   "T?"
                 ++ -- Time indicator
-                   "(\\d{2})?:?"
+                   "T?"
                 ++ -- hour
                    "(\\d{2})?:?"
                 ++ -- minute
-                   "(\\d{2})?"
+                   "(\\d{2})?:?"
                 ++ -- second
-                   "([.,]\\d{1,})?"
+                   "(\\d{2})?"
                 ++ -- fractional second
-                   "(Z|[+-]\\d{2}:?\\d{2})?"
+                   "([.,]\\d{1,})?"
                 ++ -- offset
-                   "(.*)?"
-             -- invalid text
+                   "(Z|[+-]\\d{2}:?\\d{2})?"
+                -- invalid text
+                ++ "(.*)?"
             )
             |> Maybe.withDefault Regex.never
         )
