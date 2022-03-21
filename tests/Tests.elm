@@ -1,10 +1,12 @@
-module Tests exposing (assertTime, fromUnixTest, rangeAssert, testDayOfWeek, testDaysToYears, testErrors, testLeapYear, testParsing, testRange, testToUnix, unWrapTime)
+module Tests exposing (assertTime, fromUnixTest, rangeAssert, testDayOfWeek, testDaysToYears, testErrors, testLeapYear, testParsing, testRange, testSerialisation, testToUnix, unWrapTime)
 
 import Expect exposing (..)
+import Fuzz exposing (Fuzzer, intRange)
 import ISO8601 exposing (..)
 import ISO8601.Extras exposing (..)
+import Random
 import Test exposing (..)
-import Time exposing (Weekday(..))
+import Time exposing (Posix, Weekday(..))
 
 
 assertTime message time y m d h min s mil o =
@@ -104,6 +106,22 @@ testDayOfWeek =
         , assert "1582-10-01" Fri
         , assert "0001-01-01" Mon
         ]
+
+
+posix : Fuzzer Posix
+posix =
+    Fuzz.map Time.millisToPosix (intRange 0 Random.maxInt)
+
+
+testSerialisation : Test
+testSerialisation =
+    fuzz posix "serialisation round trip" <|
+        \t ->
+            ISO8601.fromPosix t
+                |> ISO8601.toString
+                |> ISO8601.fromString
+                |> Result.map ISO8601.toPosix
+                |> Expect.equal (Ok t)
 
 
 testToUnix : Test
