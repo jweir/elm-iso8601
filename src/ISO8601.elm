@@ -49,7 +49,7 @@ offset.
 import Array
 import ISO8601.Extras exposing (..)
 import Json.Decode as Decode
-import Regex exposing (find, replace, split)
+import Regex 
 import Result exposing (Result)
 import String
 import Time exposing (Posix(..), Weekday(..))
@@ -317,9 +317,6 @@ parseMilliseconds msString =
 parseOffset : Maybe String -> Offset
 parseOffset timeString =
     let
-        re =
-            Regex.fromString "(Z|([+-]\\d{2}:?\\d{2}))?" |> Maybe.withDefault Regex.never
-
         -- offset
         -- offset can be Z or ±h:mm ±hhmm or ±hh
         match =
@@ -378,8 +375,7 @@ fromPosix posix =
 -}
 toTime : Time -> Int
 toTime time =
-    case time.year >= 1970 of
-        False ->
+  if time.year < 1970 then
             let
                 years =
                     List.map daysInYear (List.range (time.year + 1) (1970 - 1))
@@ -400,7 +396,7 @@ toTime time =
             in
             0 - (List.sum tots - time.millisecond)
 
-        True ->
+            else
             let
                 years =
                     List.map daysInYear (List.range 1970 (time.year - 1))
@@ -492,9 +488,6 @@ fromTime msFloat =
                 ( months, daysInMonth ) =
                     daysToMonths years 1 remainingDays
 
-                days =
-                    rem // iday
-
                 seconds =
                     rem // isec |> modBy 60
 
@@ -545,10 +538,6 @@ validateHour time =
 
 validateTime : Time -> Result String Time
 validateTime time =
-    let
-        maxDays =
-            daysInMonth
-    in
     if time.month < 1 || time.month > 12 then
         Err "month is out of range"
 
