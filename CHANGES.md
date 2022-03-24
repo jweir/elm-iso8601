@@ -1,10 +1,13 @@
-# 8.0.0
+# 7.0.1
 
 Fix bug printing negative offsets - thanks @kdelwat
 
 ## Breaking Change
 The library now strict about parsing times.  Before it was liberal in accepting strings with dates or times in them.
 Now only a valid ISO8601 date/time string will be parsed.
+
+This should cause a major version change, but Elm can not detect the change. 
+
 
 
 # 7.0.0

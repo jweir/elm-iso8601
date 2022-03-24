@@ -3,7 +3,7 @@
     "name": "jweir/elm-iso8601",
     "summary": "ISO8601 time parsing.",
     "license": "MIT",
-    "version": "8.0.0",
+    "version": "7.0.1",
     "exposed-modules": [
         "ISO8601"
     ],
