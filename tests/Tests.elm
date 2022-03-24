@@ -1,10 +1,12 @@
-module Tests exposing (assertTime, fromUnixTest, rangeAssert, testDayOfWeek, testDaysToYears, testErrors, testLeapYear, testParsing, testRange, testToUnix, unWrapTime)
+module Tests exposing (assertTime, fromUnixTest, rangeAssert, testDayOfWeek, testDaysToYears, testErrors, testLeapYear, testParsing, testRange, testSerialisation, testToUnix, unWrapTime)
 
 import Expect exposing (..)
+import Fuzz exposing (Fuzzer, intRange)
 import ISO8601 exposing (..)
 import ISO8601.Extras exposing (..)
+import Random
 import Test exposing (..)
-import Time exposing (Weekday(..))
+import Time exposing (Posix, Weekday(..))
 
 
 assertTime message time y m d h min s mil o =
@@ -106,6 +108,22 @@ testDayOfWeek =
         ]
 
 
+posix : Fuzzer Posix
+posix =
+    Fuzz.map Time.millisToPosix (intRange 0 Random.maxInt)
+
+
+testSerialisation : Test
+testSerialisation =
+    fuzz posix "serialisation round trip" <|
+        \t ->
+            ISO8601.fromPosix t
+                |> ISO8601.toString
+                |> ISO8601.fromString
+                |> Result.map ISO8601.toPosix
+                |> Expect.equal (Ok t)
+
+
 testToUnix : Test
 testToUnix =
     let
@@ -121,6 +139,8 @@ testToUnix =
         -- Unix Epoch in New Dehli
         , assert "1970-01-01T05:30:00+0530" 0
         , assert "1970-01-01T00:00:00-0030" 1800000
+        , assert "1970-01-01T00:00:00-0001" 60000
+        , assert "1970-01-01T00:00:00-0059" 3540000
         , assert "1970-01-01T00:00:00+0030" -1800000
         , assert "1969-12-31T17:00:00-0700" 0
         , assert "1969-12-31T23:59:59.099Z" -901

@@ -181,7 +181,7 @@ fmtOffset minutes =
                 minutes // 60
 
             m =
-                modBy 60 minutes
+                abs (remainderBy 60 minutes)
 
             symbol =
                 if minutes >= 0 then
